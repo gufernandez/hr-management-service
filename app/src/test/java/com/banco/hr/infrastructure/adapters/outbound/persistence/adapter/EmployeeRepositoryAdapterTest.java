@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,8 +37,11 @@ import com.banco.hr.domain.model.employee.EmployeeName;
 import com.banco.hr.domain.model.employee.EmployeeStatus;
 import com.banco.hr.domain.model.position.PositionId;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.EmployeeJpaEntity;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEventJpaEntity;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxProcessingStatus;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.mapper.EmployeePersistenceMapper;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.EmployeeJpaRepository;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.OutboxEventJpaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeRepositoryAdapterTest {
@@ -53,6 +57,9 @@ class EmployeeRepositoryAdapterTest {
 
     @Mock
     private EmployeePersistenceMapper employeePersistenceMapper;
+
+    @Mock
+    private OutboxEventJpaRepository outboxEventJpaRepository;
 
     @InjectMocks
     private EmployeeRepositoryAdapter employeeRepositoryAdapter;
@@ -90,22 +97,63 @@ class EmployeeRepositoryAdapterTest {
     }
 
     @Test
-    @DisplayName("Deve mapear e persistir agregado Employee")
-    void saveMapsEntityAndReturnsSavedAggregate() {
-        // Preparação: configura conversões e retorno do repositório JPA.
+    @DisplayName("Deve persistir colaborador e evento de criação na mesma operação")
+    void savePersistsEmployeeAndCreatedEvent() {
+        // Preparação: configura persistência do agregado e da entrada outbox de criação.
         Employee employee = employee();
         EmployeeJpaEntity entity = entity();
+        when(employeeJpaRepository.findById(EMPLOYEE_UUID)).thenReturn(Optional.empty());
         when(employeePersistenceMapper.toEntity(employee)).thenReturn(entity);
         when(employeeJpaRepository.save(entity)).thenReturn(entity);
         when(employeePersistenceMapper.toDomain(entity)).thenReturn(employee);
 
-        // Execução: salva o agregado pela porta de saída.
+        // Execução: persiste o agregado junto ao evento de criação.
         Employee result = employeeRepositoryAdapter.save(employee);
 
-        // Verificação: o agregado retornado corresponde à entidade salva.
+        // Verificação: o agregado e o evento são persistidos pela mesma operação do adapter.
         assertSame(employee, result);
         verify(employeeJpaRepository).save(entity);
+        ArgumentCaptor<OutboxEventJpaEntity> outbox =
+                ArgumentCaptor.forClass(OutboxEventJpaEntity.class);
+        verify(outboxEventJpaRepository).save(outbox.capture());
+        assertOutbox(outbox.getValue(), employee, "EmployeeCreatedEvent");
         verify(employeePersistenceMapper).toDomain(entity);
+    }
+
+    @Test
+    @DisplayName("Deve persistir evento de alteração para exclusão")
+    void savePersistsDeletedStatusChangedEvent() {
+        assertStatusChangedEventIsPersisted(EmployeeStatus.DELETED);
+    }
+
+    @Test
+    @DisplayName("Deve persistir evento de alteração para ativação")
+    void savePersistsActiveStatusChangedEvent() {
+        assertStatusChangedEventIsPersisted(EmployeeStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("Deve persistir evento de alteração para desativação")
+    void savePersistsInactiveStatusChangedEvent() {
+        assertStatusChangedEventIsPersisted(EmployeeStatus.INACTIVE);
+    }
+
+    @Test
+    @DisplayName("Não deve criar evento quando o status persistido não foi alterado")
+    void saveDoesNotPersistEventWhenStatusIsUnchanged() {
+        // Preparação: o estado persistido e o agregado têm o mesmo status.
+        Employee employee = employee();
+        EmployeeJpaEntity entity = entity();
+        when(employeeJpaRepository.findById(EMPLOYEE_UUID)).thenReturn(Optional.of(entity));
+        when(employeePersistenceMapper.toEntity(employee)).thenReturn(entity);
+        when(employeeJpaRepository.save(entity)).thenReturn(entity);
+        when(employeePersistenceMapper.toDomain(entity)).thenReturn(employee);
+
+        // Execução: salva o agregado sem mudança de status.
+        employeeRepositoryAdapter.save(employee);
+
+        // Verificação: alteração técnica sem mudança de status não gera evento de negócio.
+        verify(outboxEventJpaRepository, never()).save(any(OutboxEventJpaEntity.class));
     }
 
     @Test
@@ -233,32 +281,79 @@ class EmployeeRepositoryAdapterTest {
                 DataIntegrityViolationException.class,
                 () -> employeeRepositoryAdapter.save(employee));
         assertSame(failure, result);
-        verify(employeeJpaRepository, never()).findById(EMPLOYEE_UUID);
+        verify(employeeJpaRepository).findById(EMPLOYEE_UUID);
+        verify(outboxEventJpaRepository, never()).save(any(OutboxEventJpaEntity.class));
+    }
+
+    private void assertStatusChangedEventIsPersisted(EmployeeStatus status) {
+        // Preparação: monta agregado atualizado e evento de status correspondente.
+        Employee employee = employee(status);
+        EmployeeJpaEntity entity = entity(status);
+        when(employeeJpaRepository.findById(EMPLOYEE_UUID))
+                .thenReturn(Optional.of(entity()));
+        when(employeePersistenceMapper.toEntity(employee)).thenReturn(entity);
+        when(employeeJpaRepository.save(entity)).thenReturn(entity);
+        when(employeePersistenceMapper.toDomain(entity)).thenReturn(employee);
+
+        // Execução: grava a alteração do colaborador e seu evento de status.
+        Employee result = employeeRepositoryAdapter.save(employee);
+
+        // Verificação: o evento pendente referente à transição é persistido com o colaborador.
+        assertSame(employee, result);
+        ArgumentCaptor<OutboxEventJpaEntity> outbox =
+                ArgumentCaptor.forClass(OutboxEventJpaEntity.class);
+        verify(outboxEventJpaRepository).save(outbox.capture());
+        assertOutbox(outbox.getValue(), employee, "EmployeeStatusChangedEvent");
+        verify(employeeJpaRepository).save(entity);
+    }
+
+    private void assertOutbox(
+            OutboxEventJpaEntity event,
+            Employee employee,
+            String eventType) {
+        assertEquals(employee.id().value(), event.getEmployeeId());
+        assertEquals(employee.status(), event.getEmployeeStatus());
+        assertEquals(employee.lastUpdatedAt(), event.getUpdateTime());
+        assertEquals(eventType, event.getEventType());
+        assertEquals(OutboxProcessingStatus.PENDING, event.getProcessingStatus());
+        assertEquals(employee.lastUpdatedAt(), event.getCreatedAt());
+        assertNull(event.getPublishedAt());
+        assertEquals(0, event.getRetryCount());
     }
 
     private EmployeeJpaEntity entity() {
+        return entity(EmployeeStatus.CREATED);
+    }
+
+    private EmployeeJpaEntity entity(EmployeeStatus status) {
+        Instant updatedAt = status == EmployeeStatus.CREATED ? CREATED_AT : CREATED_AT.plusSeconds(60);
         return new EmployeeJpaEntity(
                 EMPLOYEE_UUID,
                 "Ana Silva",
                 "ana@example.com",
                 DEPARTMENT_UUID,
                 UUID.fromString("75cbb9f4-96c9-4c58-b849-0b0dfb54be0d"),
-                EmployeeStatus.CREATED,
+                status,
                 CREATED_AT,
-                CREATED_AT,
-                null);
+                updatedAt,
+                status == EmployeeStatus.DELETED ? updatedAt : null);
     }
 
     private Employee employee() {
+        return employee(EmployeeStatus.CREATED);
+    }
+
+    private Employee employee(EmployeeStatus status) {
+        Instant updatedAt = status == EmployeeStatus.CREATED ? CREATED_AT : CREATED_AT.plusSeconds(60);
         return Employee.reconstitute(
                 new EmployeeId(EMPLOYEE_UUID),
                 new EmployeeName("Ana Silva"),
                 new Email("ana@example.com"),
                 new DepartmentId(DEPARTMENT_UUID),
                 new PositionId(UUID.fromString("75cbb9f4-96c9-4c58-b849-0b0dfb54be0d")),
-                EmployeeStatus.CREATED,
+                status,
                 CREATED_AT,
-                CREATED_AT,
-                null);
+                updatedAt,
+                status == EmployeeStatus.DELETED ? updatedAt : null);
     }
 }

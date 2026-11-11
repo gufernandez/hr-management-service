@@ -115,9 +115,9 @@ Employee (table = employee) {
 
 - Ao deletar um funcionário, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="DELETED", eventType="EmployeeStatusChangedEvent".
 
-- Caso tenha ocorrido alteração no status, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="ACTIVATED", eventType="EmployeeStatusChangedEvent".
+- Caso tenha ocorrido alteração no status, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="ACTIVE", eventType="EmployeeStatusChangedEvent".
 
-- Caso tenha ocorrido alteração no status, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="DEACTIVATED", eventType="EmployeeStatusChangedEvent".
+- Caso tenha ocorrido alteração no status, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="INACTIVE", eventType="EmployeeStatusChangedEvent".
 
 ```
 OutboxEvents (table = outbox_events) {

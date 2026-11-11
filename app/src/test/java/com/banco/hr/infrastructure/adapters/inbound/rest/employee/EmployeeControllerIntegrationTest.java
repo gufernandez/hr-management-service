@@ -3,9 +3,11 @@ package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
 import com.banco.hr.domain.model.employee.EmployeeStatus;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.DepartmentJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.EmployeeJpaEntity;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEventJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.PositionJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.DepartmentJpaRepository;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.EmployeeJpaRepository;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.OutboxEventJpaRepository;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.PositionJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -71,6 +73,9 @@ class EmployeeControllerIntegrationTest {
     private EmployeeJpaRepository employeeRepository;
 
     @Autowired
+    private OutboxEventJpaRepository outboxEventRepository;
+
+    @Autowired
     private Environment environment;
 
     @DynamicPropertySource
@@ -83,6 +88,7 @@ class EmployeeControllerIntegrationTest {
 
     @BeforeEach
     void prepareDatabase() {
+        outboxEventRepository.deleteAll();
         employeeRepository.deleteAll();
         positionRepository.deleteAll();
         departmentRepository.deleteAll();
@@ -132,6 +138,18 @@ class EmployeeControllerIntegrationTest {
         assertEquals(persisted.getCreatedAt(), persisted.getLastUpdatedAt());
         assertNull(persisted.getDeletedAt());
         assertEquals(1, employeeRepository.count());
+
+        // Verificação: o cadastro grava atomicamente o evento de criação na outbox.
+        OutboxEventJpaEntity outboxEvent = outboxEventRepository.findAll().get(0);
+        assertEquals(1, outboxEventRepository.count());
+        assertNotNull(outboxEvent.getEventId());
+        assertEquals(body.id(), outboxEvent.getEmployeeId());
+        assertEquals(EmployeeStatus.CREATED, outboxEvent.getEmployeeStatus());
+        assertEquals("EmployeeCreatedEvent", outboxEvent.getEventType());
+        assertEquals("PENDING", outboxEvent.getProcessingStatus().name());
+        assertEquals(0, outboxEvent.getRetryCount());
+        assertNull(outboxEvent.getPublishedAt());
+        assertEquals(outboxEvent.getCreatedAt(), outboxEvent.getUpdateTime());
     }
 
     @Test
@@ -180,6 +198,7 @@ class EmployeeControllerIntegrationTest {
         assertEquals(HttpStatus.NOT_FOUND, missingDepartment.getStatusCode());
         assertEquals(HttpStatus.NOT_FOUND, missingPosition.getStatusCode());
         assertEquals(0, employeeRepository.count());
+        assertEquals(0, outboxEventRepository.count());
     }
 
     @Test
@@ -209,6 +228,7 @@ class EmployeeControllerIntegrationTest {
         // Verificação: deve retornar conflito e preservar o registro original.
         assertEquals(HttpStatus.CONFLICT, duplicate.getStatusCode());
         assertEquals(1, employeeRepository.count());
+        assertEquals(1, outboxEventRepository.count());
         assertTrue(employeeRepository.existsByEmail("ana@example.com"));
     }
 
@@ -405,6 +425,53 @@ class EmployeeControllerIntegrationTest {
         EmployeeJpaEntity persisted = employeeRepository.findById(created.id()).orElseThrow();
         assertEquals(EmployeeStatus.DELETED, persisted.getStatus());
         assertNotNull(persisted.getDeletedAt());
+        assertEquals(2, outboxEventRepository.count());
+    }
+
+    @Test
+    @DisplayName("Deve gravar na outbox os eventos de ativação, desativação e exclusão")
+    void statusChangesPersistPendingOutboxEventsWithTheirEmployeeStatuses() {
+        // Preparação: cria colaborador, que também registra evento CREATED.
+        EmployeeResponse created = createEmployee("Ana Silva", "ana@example.com");
+
+        // Execução: executa as transições permitidas até excluir logicamente o colaborador.
+        ResponseEntity<EmployeeResponse> activated = restTemplate.postForEntity(
+                EMPLOYEES_ENDPOINT + "/" + created.id() + "/activate", null,
+                EmployeeResponse.class);
+        ResponseEntity<EmployeeResponse> deactivated = restTemplate.postForEntity(
+                EMPLOYEES_ENDPOINT + "/" + created.id() + "/deactivate", null,
+                EmployeeResponse.class);
+        ResponseEntity<Void> deleted = restTemplate.exchange(
+                EMPLOYEES_ENDPOINT + "/" + created.id(), HttpMethod.DELETE, null, Void.class);
+
+        // Verificação: cada transição aceita gera exatamente um evento pendente com status correto.
+        assertEquals(HttpStatus.OK, activated.getStatusCode());
+        assertEquals(HttpStatus.OK, deactivated.getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, deleted.getStatusCode());
+        java.util.List<OutboxEventJpaEntity> events =
+                outboxEventRepository.findAll();
+        assertEquals(4, events.size());
+        assertOutboxEvent(events, EmployeeStatus.CREATED, "EmployeeCreatedEvent");
+        assertOutboxEvent(events, EmployeeStatus.ACTIVE, "EmployeeStatusChangedEvent");
+        assertOutboxEvent(events, EmployeeStatus.INACTIVE, "EmployeeStatusChangedEvent");
+        assertOutboxEvent(events, EmployeeStatus.DELETED, "EmployeeStatusChangedEvent");
+    }
+
+    private void assertOutboxEvent(
+            java.util.List<OutboxEventJpaEntity> events,
+            EmployeeStatus status,
+            String eventType) {
+        OutboxEventJpaEntity event = events.stream()
+                .filter(candidate -> candidate.getEmployeeStatus() == status)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                        "Evento de outbox não encontrado para status " + status));
+        assertEquals(eventType, event.getEventType());
+        assertEquals("PENDING", event.getProcessingStatus().name());
+        assertNotNull(event.getEventId());
+        assertEquals(0, event.getRetryCount());
+        assertNull(event.getPublishedAt());
+        assertEquals(event.getCreatedAt(), event.getUpdateTime());
     }
 
     private EmployeeResponse createEmployee(String name, String email) {

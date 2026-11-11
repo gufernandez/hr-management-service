@@ -68,3 +68,9 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Vamos implementar o RF02 que permite a criação de cargos. Crie apenas os arquivos da application e domain layer, sem mexer na infraestrutura. Crie os testes unitários para testar apropriadamente o requisito e suas regras. Atualize o arquivo AI_USAGE.md com a nossa iteração.
 - **Resultado/Decisão:** Foram criados os value objects de título e nível, o agregado Cargo e seu caso de uso de criação com persistência via porta de saída. Os testes cobrem geração de identificador e data, normalização e campos obrigatórios; o nível permanece como texto, sem restringir os valores aos exemplos do requisito.
+
+### 10. Implementação do RF02 - Banco de Dados
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF02, crie a camada de infrastructure focando no banco de dados. Crie o arquivo Flyway para criação da tabela de position, o mapeamento da entidade do DB em código e a integração com o use case previamente criado via repository. Crie também os testes unitários que validam as novas camadas. Atualize o arquivo AI_USAGE.md com a nossa iteração.
+- **Resultado/Decisão:** Foi criada a migration V2 para a tabela `position`, junto à entidade JPA, mapper e adapter que implementa `PositionRepositoryPort`. Os testes unitários cobrem o mapeamento dos campos e o fluxo de persistência, incluindo a propagação de falhas; nenhum teste foi executado a pedido do usuário.

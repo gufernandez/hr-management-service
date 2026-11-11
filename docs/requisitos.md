@@ -22,7 +22,7 @@ Department (table = department) {
 - Cadastrar Cargo (`POST /positions`) com id, title, level (ex: Junior, Pleno, Senior).
 
 ```
-Position (table = department) {
+Position (table = position) {
     id (UUID) PK, 
     title (string), 
     level(string), 

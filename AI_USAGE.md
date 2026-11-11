@@ -33,7 +33,3 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 ### 2. Configuração do ambiente
 - **Prompt**: Dados os requisitos técnicos da solução (Java, Spring Boot, SQL, Kafka, etc.) configure o scaffold do projeto, a configuração do docker-compose e Dockerfiles, e a pipeline do Github Actions que realizará build, test e sonar da aplicação Java.
 - **Resultado/Decisão:** Foi definido a estrutura hexagonal como a esperada pela solução e configuração do ambiente com o passo-a-passo.
-
-### 3. Criação MCP Server customizado
-- **Prompt**: Dê o passo a passo para criação de um MCP server customizado que irá ler as documentações em "employees-manager/docs" e atualizará o arquivo "employees-manager/AI_USAGE.md" na raíz do projeto com cada iteração com o agente IA.
-- **Resultado/Decisão:** O código ```mcp-server/src/server.py``` foi gerado com as ferramentas adequadas para o projeto, que obtém informações das documentações além de ler o código Java da aplicação principa.

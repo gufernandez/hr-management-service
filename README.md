@@ -32,7 +32,7 @@ Este é um desafio técnico para uma vaga de Engenheiro(a) de Software Sênior.
 
 ``` Acredito que este commit inicial sem muita lógica de negócios, integrações com API/Kafkas/SQL facilita a identificação de erros de integração quando cada peça for acoplada nos futuros commits.```
 
-10. Configurar servidor MCP com as boas práticas a serem seguidas pelo copilot;
+10. Configurar boas práticas a serem seguidas pelo copilot;
 11. A partir daqui, utilizar IA para auxiliar na implementação de cada requisito funcional do sistema. Começando pela camada de negócios e depois a integração com API, DB e Kafka. Deve ser feito um requisito de cada vez.
 
 ``` Implementar um requisito funcional de cada vez permite a melhor análise e teste de cada parte do sistema e evita perda de escopo.```

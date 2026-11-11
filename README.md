@@ -13,7 +13,6 @@ Este é um desafio técnico para uma vaga de Engenheiro(a) de Software Sênior.
 - Spring Actuator Health: http://localhost:8080/actuator/health
 - Spring Actuator Metrics: http://localhost:8080/actuator/metrics
 - SonarQube Dashboard: http://localhost:9000 (Default login: admin / admin)
-- Python MCP Server: http://localhost:8000
 
 
 ## 1. Definindo passo a passo

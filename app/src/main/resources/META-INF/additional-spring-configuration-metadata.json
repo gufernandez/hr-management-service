@@ -1,0 +1,41 @@
+{
+  "groups": [
+    {
+      "name": "outbox",
+      "type": "com.banco.hr.infrastructure.config.OutboxProperties",
+      "sourceType": "com.banco.hr.infrastructure.config.OutboxProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "outbox.poller.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Habilita a execução periódica do Outbox Poller."
+    },
+    {
+      "name": "outbox.poller.interval",
+      "type": "java.lang.Long",
+      "defaultValue": 5000,
+      "description": "Intervalo do Outbox Poller em milissegundos."
+    },
+    {
+      "name": "outbox.poller.initial-delay",
+      "type": "java.lang.Long",
+      "defaultValue": 0,
+      "description": "Atraso inicial do Outbox Poller em milissegundos."
+    },
+    {
+      "name": "outbox.poller.max-retries",
+      "type": "java.lang.Integer",
+      "defaultValue": 5,
+      "description": "Número máximo de tentativas de publicação de cada evento."
+    },
+    {
+      "name": "outbox.kafka.topic",
+      "type": "java.lang.String",
+      "defaultValue": "hr.employee-events.v1",
+      "description": "Tópico Kafka de eventos de colaboradores."
+    }
+  ]
+}

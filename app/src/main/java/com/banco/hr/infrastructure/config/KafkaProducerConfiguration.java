@@ -2,6 +2,7 @@ package com.banco.hr.infrastructure.config;
 
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -13,9 +14,9 @@ public class KafkaProducerConfiguration {
 
     @Bean
     public ProducerFactory<String, String> employeeEventProducerFactory(
-            KafkaProperties kafkaProperties) {
+            KafkaProperties kafkaProperties, SslBundles sslBundles) {
         return new DefaultKafkaProducerFactory<>(
-                kafkaProperties.buildProducerProperties(),
+                kafkaProperties.buildProducerProperties(sslBundles),
                 new StringSerializer(),
                 new StringSerializer());
     }

@@ -2,6 +2,7 @@ package com.banco.hr.infrastructure.config;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -18,9 +19,8 @@ public class KafkaConsumerConfiguration {
 
     @Bean
     public ConsumerFactory<String, String> employeeEventConsumerFactory(
-            KafkaProperties kafkaProperties) {
-        return new DefaultKafkaConsumerFactory<>(
-                kafkaProperties.buildConsumerProperties(),
+            KafkaProperties kafkaProperties, SslBundles sslBundles) {
+        return new DefaultKafkaConsumerFactory<>(kafkaProperties.buildConsumerProperties(sslBundles),
                 new StringDeserializer(),
                 new StringDeserializer());
     }

@@ -9,6 +9,6 @@ public record PositionTitle(String value) {
             throw new DomainException("O título do cargo não pode ser vazio.");
         }
 
-        value = value.trim();
+        value = PositionText.toTitleCase(value);
     }
 }

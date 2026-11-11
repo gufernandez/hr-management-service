@@ -3,6 +3,7 @@ package com.banco.hr.application.usecase;
 import com.banco.hr.application.ports.inbound.CreatePositionCommand;
 import com.banco.hr.application.ports.inbound.CreatePositionUseCase;
 import com.banco.hr.application.ports.outbound.PositionRepositoryPort;
+import com.banco.hr.domain.exception.PositionAlreadyExistsException;
 import com.banco.hr.domain.model.position.Position;
 import com.banco.hr.domain.model.position.PositionLevel;
 import com.banco.hr.domain.model.position.PositionTitle;
@@ -26,6 +27,10 @@ public final class CreatePositionUseCaseImpl implements CreatePositionUseCase {
 
         PositionTitle title = new PositionTitle(command.title());
         PositionLevel level = new PositionLevel(command.level());
+
+        if (positionRepository.existsByTitleAndLevel(title, level)) {
+            throw new PositionAlreadyExistsException(title.value(), level.value());
+        }
 
         Position position = Position.create(title, level, clock.instant());
         return Objects.requireNonNull(

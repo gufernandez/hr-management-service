@@ -2,6 +2,7 @@ package com.banco.hr.infrastructure.adapters.inbound.rest.position;
 
 import com.banco.hr.application.ports.inbound.CreatePositionCommand;
 import com.banco.hr.application.ports.inbound.CreatePositionUseCase;
+import com.banco.hr.domain.exception.PositionAlreadyExistsException;
 import com.banco.hr.domain.model.position.Position;
 import com.banco.hr.domain.model.position.PositionId;
 import com.banco.hr.domain.model.position.PositionLevel;
@@ -51,6 +52,7 @@ class PositionControllerTest {
         validator.afterPropertiesSet();
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new PositionController(createPositionUseCase))
+                .setControllerAdvice(new PositionExceptionHandler())
                 .setValidator(validator)
                 .build();
     }
@@ -113,5 +115,27 @@ class PositionControllerTest {
 
         // Verificação: nenhuma entrada inválida deve ser enviada ao caso de uso.
         verify(createPositionUseCase, never()).createPosition(any(CreatePositionCommand.class));
+    }
+
+    @Test
+    @DisplayName("Deve responder 409 quando já existir cargo com o mesmo título e nível")
+    void createReturnsConflictWhenPositionAlreadyExists() throws Exception {
+        // Preparação: o caso de uso informa que a combinação já está cadastrada.
+        when(createPositionUseCase.createPosition(
+                new CreatePositionCommand("Software Engineer", "Senior")))
+                .thenThrow(new PositionAlreadyExistsException("Software Engineer", "Senior"));
+
+        // Execução e verificação: a duplicidade deve ser convertida em conflito HTTP.
+        mockMvc.perform(post("/api/v1/positions")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Software Engineer",
+                                  "level": "Senior"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.title").value("Cargo já cadastrado"))
+                .andExpect(jsonPath("$.status").value(409));
     }
 }

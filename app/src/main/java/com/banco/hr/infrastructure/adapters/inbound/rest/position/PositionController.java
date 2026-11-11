@@ -33,6 +33,7 @@ public class PositionController {
             description = "Cadastra um cargo com título e nível.")
     @ApiResponse(responseCode = "201", description = "Cargo criado com sucesso.")
     @ApiResponse(responseCode = "400", description = "Os dados informados são inválidos.")
+    @ApiResponse(responseCode = "409", description = "Já existe um cargo com esse título e nível.")
     public ResponseEntity<PositionResponse> create(
             @Valid @RequestBody CreatePositionRequest request) {
         Position position = createPositionUseCase.createPosition(

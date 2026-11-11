@@ -1,5 +1,6 @@
 package com.banco.hr.infrastructure.adapters.outbound.persistence.adapter;
 
+import com.banco.hr.domain.exception.PositionAlreadyExistsException;
 import com.banco.hr.domain.model.position.Position;
 import com.banco.hr.domain.model.position.PositionId;
 import com.banco.hr.domain.model.position.PositionLevel;
@@ -13,12 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +40,22 @@ class PositionRepositoryAdapterTest {
 
     @InjectMocks
     private PositionRepositoryAdapter positionRepositoryAdapter;
+
+    @Test
+    @DisplayName("Deve consultar a existência pelo título e nível")
+    void existsByTitleAndLevelDelegatesBothValuesToJpaRepository() {
+        // Preparação: simula a existência da combinação informada na persistência.
+        when(positionJpaRepository.existsByTitleAndLevel("Software Engineer", "Senior"))
+                .thenReturn(true);
+
+        // Execução: consulta a combinação por meio da porta de repositório.
+        boolean exists = positionRepositoryAdapter.existsByTitleAndLevel(
+                new PositionTitle("Software Engineer"), new PositionLevel("Senior"));
+
+        // Verificação: o resultado e ambos os critérios devem ser preservados.
+        assertTrue(exists);
+        verify(positionJpaRepository).existsByTitleAndLevel("Software Engineer", "Senior");
+    }
 
     @Test
     @DisplayName("Deve mapear, persistir e devolver o cargo salvo")
@@ -90,5 +109,28 @@ class PositionRepositoryAdapterTest {
                 IllegalStateException.class, () -> positionRepositoryAdapter.save(position));
 
         assertSame(failure, result);
+    }
+
+    @Test
+    @DisplayName("Deve traduzir violação da combinação única para exceção de cargo existente")
+    void saveTranslatesDuplicateTitleAndLevelConstraintViolation() {
+        // Preparação: simula violação da constraint por outra gravação concorrente.
+        Position position = Position.reconstitute(
+                new PositionId(POSITION_ID),
+                new PositionTitle("Software Engineer"),
+                new PositionLevel("Senior"),
+                CREATED_AT);
+        PositionJpaEntity entity =
+                new PositionJpaEntity(POSITION_ID, "Software Engineer", "Senior", CREATED_AT);
+        when(positionPersistenceMapper.toEntity(position)).thenReturn(entity);
+        when(positionJpaRepository.save(entity))
+                .thenThrow(new DataIntegrityViolationException("Unique constraint violation"));
+        when(positionJpaRepository.existsByTitleAndLevel("Software Engineer", "Senior"))
+                .thenReturn(true);
+
+        // Verificação: a duplicidade deve usar a mesma exceção de domínio do caso usual.
+        assertThrows(PositionAlreadyExistsException.class,
+                () -> positionRepositoryAdapter.save(position));
+        verify(positionJpaRepository).existsByTitleAndLevel("Software Engineer", "Senior");
     }
 }

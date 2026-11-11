@@ -21,7 +21,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.banco.hr.application.ports.inbound.CreatePositionCommand;
 import com.banco.hr.application.ports.outbound.PositionRepositoryPort;
 import com.banco.hr.domain.exception.DomainException;
+import com.banco.hr.domain.exception.PositionAlreadyExistsException;
 import com.banco.hr.domain.model.position.Position;
+import com.banco.hr.domain.model.position.PositionLevel;
+import com.banco.hr.domain.model.position.PositionTitle;
 
 @ExtendWith(MockitoExtension.class)
 class CreatePositionUseCaseImplTest {
@@ -46,6 +49,9 @@ class CreatePositionUseCaseImplTest {
     void createPositionSavesAndReturnsPositionWithGeneratedIdAndTimestamp() {
         // Preparação: simula uma persistência bem-sucedida.
         CreatePositionCommand command = new CreatePositionCommand("Software Engineer", "Senior");
+        when(positionRepository.existsByTitleAndLevel(
+                new PositionTitle("Software Engineer"), new PositionLevel("Senior")))
+                .thenReturn(false);
         when(positionRepository.save(any(Position.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -57,15 +63,20 @@ class CreatePositionUseCaseImplTest {
         assertEquals("Software Engineer", result.title().value());
         assertEquals("Senior", result.level().value());
         assertEquals(NOW, result.createdAt());
+        verify(positionRepository).existsByTitleAndLevel(
+                new PositionTitle("Software Engineer"), new PositionLevel("Senior"));
         verify(positionRepository).save(result);
     }
 
     @Test
-    @DisplayName("Deve normalizar título e nível antes de salvar")
+    @DisplayName("Deve normalizar título e nível antes de consultar e salvar")
     void createPositionTrimsValuesBeforeSaving() {
-        // Preparação: envia espaços extras para validar a normalização dos value objects.
+        // Preparação: envia caixa divergente e espaços repetidos para validar a normalização.
         CreatePositionCommand command =
-                new CreatePositionCommand("  Developer  ", "  Pleno  ");
+                new CreatePositionCommand(" engenheiro  de software ", " jUNIOR ");
+        when(positionRepository.existsByTitleAndLevel(
+                new PositionTitle("Engenheiro de Software"), new PositionLevel("Junior")))
+                .thenReturn(false);
         when(positionRepository.save(any(Position.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -73,9 +84,30 @@ class CreatePositionUseCaseImplTest {
         Position result = useCase.createPosition(command);
 
         // Verificação: a gravação recebe valores normalizados.
-        assertEquals("Developer", result.title().value());
-        assertEquals("Pleno", result.level().value());
+        assertEquals("Engenheiro de Software", result.title().value());
+        assertEquals("Junior", result.level().value());
+        verify(positionRepository).existsByTitleAndLevel(
+                new PositionTitle("Engenheiro de Software"), new PositionLevel("Junior"));
         verify(positionRepository).save(result);
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar cargo com mesmo título e nível sem tentar salvar")
+    void createPositionRejectsDuplicateTitleAndLevelWithoutSaving() {
+        // Preparação: informa que a combinação de título e nível já existe.
+        CreatePositionCommand command =
+                new CreatePositionCommand("Software Engineer", "Senior");
+        when(positionRepository.existsByTitleAndLevel(
+                new PositionTitle("Software Engineer"), new PositionLevel("Senior")))
+                .thenReturn(true);
+
+        // Verificação: a duplicidade deve gerar exceção de domínio e impedir a gravação.
+        assertThrows(PositionAlreadyExistsException.class,
+                () -> useCase.createPosition(command));
+
+        verify(positionRepository).existsByTitleAndLevel(
+                new PositionTitle("Software Engineer"), new PositionLevel("Senior"));
+        verify(positionRepository, never()).save(any());
     }
 
     @Test
@@ -89,6 +121,7 @@ class CreatePositionUseCaseImplTest {
                 DomainException.class, () -> useCase.createPosition(command));
         assertNotNull(exception);
 
+        verify(positionRepository, never()).existsByTitleAndLevel(any(), any());
         verify(positionRepository, never()).save(any());
     }
 
@@ -103,6 +136,7 @@ class CreatePositionUseCaseImplTest {
                 DomainException.class, () -> useCase.createPosition(command));
         assertNotNull(exception);
 
+        verify(positionRepository, never()).existsByTitleAndLevel(any(), any());
         verify(positionRepository, never()).save(any());
     }
 
@@ -114,6 +148,7 @@ class CreatePositionUseCaseImplTest {
                 NullPointerException.class, () -> useCase.createPosition(null));
         assertNotNull(exception);
 
+        verify(positionRepository, never()).existsByTitleAndLevel(any(), any());
         verify(positionRepository, never()).save(any());
     }
 
@@ -123,6 +158,9 @@ class CreatePositionUseCaseImplTest {
         // Preparação: repositório falha ao salvar o cargo.
         CreatePositionCommand command = new CreatePositionCommand("Developer", "Junior");
         IllegalStateException failure = new IllegalStateException("Repository failure");
+        when(positionRepository.existsByTitleAndLevel(
+                new PositionTitle("Developer"), new PositionLevel("Junior")))
+                .thenReturn(false);
         when(positionRepository.save(any(Position.class))).thenThrow(failure);
 
         // Verificação: falhas de persistência não devem ser ocultadas pelo caso de uso.

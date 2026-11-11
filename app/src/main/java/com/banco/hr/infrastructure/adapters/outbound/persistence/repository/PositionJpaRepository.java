@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface PositionJpaRepository extends JpaRepository<PositionJpaEntity, UUID> {
+
+    boolean existsByTitleAndLevel(String title, String level);
 }

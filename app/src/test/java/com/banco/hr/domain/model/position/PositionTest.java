@@ -40,10 +40,12 @@ class PositionTest {
     }
 
     @Test
-    @DisplayName("Deve remover espaços no início e no fim do título")
+    @DisplayName("Deve normalizar o título para title case e compactar espaços")
     void positionTitleTrimsSurroundingWhitespace() {
-        // Verificação: o título fica normalizado após a criação do value object.
-        assertEquals("Developer", new PositionTitle("  Developer  ").value());
+        // Verificação: caixa e espaços devem ser normalizados conforme o formato persistido.
+        assertEquals(
+                "Engenheiro de Software",
+                new PositionTitle("  engenheiro  de software  ").value());
     }
 
     @Test
@@ -55,10 +57,10 @@ class PositionTest {
     }
 
     @Test
-    @DisplayName("Deve remover espaços no início e no fim do nível")
+    @DisplayName("Deve normalizar o nível para title case e compactar espaços")
     void positionLevelTrimsSurroundingWhitespace() {
-        // Verificação: o nível fica normalizado e aceita os exemplos do requisito.
-        assertEquals("Pleno", new PositionLevel("  Pleno  ").value());
+        // Verificação: caixa e espaços devem ser normalizados no nível.
+        assertEquals("Junior", new PositionLevel("  jUNIOR  ").value());
     }
 
     @Test

@@ -61,10 +61,13 @@ Department (table = department) {
 ```
 
 #### **RF-02: Gestão de Cargos**
-- Cadastrar Cargo (`POST /departments`) com id, title, level (ex: Junior, Pleno, Senior).
+- Cadastrar Cargo (`POST /positions`) com id, title, level (ex: Junior, Pleno, Senior).
+
+**Regra de Domínio:** Caso já exista um cargo com o mesmo título e nível, a API deve responder HTTP 409 e não criar outro.<br>
+**Normalização:** Ao receber a solicitação, título e nível devem ser convertidos para title case e espaços consecutivos devem ser reduzidos. Exemplo: `engenheiro  de software` e `junior` são armazenados como `Engenheiro de Software` e `Junior`.<br>
 
 ```
-Position (table = department) {
+Position (table = position) {
     id (UUID) PK, 
     title (string), 
     level(string), 
@@ -278,3 +281,8 @@ Utilizei a IA para definir qual versão de Java e Spring Boot são mais adequada
 
 Com estas definições foi permitido gerar o scaffold da aplicação, a configuração do Docker e a pipeline do Github Actions para build e testes em PR.
 
+## 5. Observações Durante Desenvolvimento
+
+### Endpoint /positions
+
+Ao implementar este endpoint percebi que do jeito que fiz o refinamento poderia haver muitas entradas repetidas da mesma combinação de Título+Level de cargo, então adicionei como requisito que deve-se validar a existência desta combinação na tabela antes de criar o cargo.

@@ -9,6 +9,6 @@ public record PositionLevel(String value) {
             throw new DomainException("O nível do cargo não pode ser vazio.");
         }
 
-        value = value.trim();
+        value = PositionText.toTitleCase(value);
     }
 }

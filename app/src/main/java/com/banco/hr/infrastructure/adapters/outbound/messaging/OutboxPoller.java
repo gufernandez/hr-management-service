@@ -4,6 +4,7 @@ import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEv
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.OutboxEventJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,6 +26,7 @@ public class OutboxPoller {
     private final int maxRetries;
     private final Clock clock;
 
+    @Autowired
     public OutboxPoller(
             OutboxEventJpaRepository outboxEventRepository,
             KafkaOutboxEventPublisher eventPublisher,
@@ -46,7 +48,9 @@ public class OutboxPoller {
         this.clock = Objects.requireNonNull(clock);
     }
 
-    @Scheduled(fixedDelayString = "${outbox.poller.interval:5s}")
+    @Scheduled(
+            fixedDelayString = "${outbox.poller.interval:5000}",
+            initialDelayString = "${outbox.poller.initial-delay:0}")
     @Transactional
     public void publishPendingEvents() {
         for (OutboxEventJpaEntity event : outboxEventRepository.findPendingEventsForUpdate()) {

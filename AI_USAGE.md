@@ -140,3 +140,8 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Prompt**: Implemente o RF06 com consumer Kafka para o tópico já criado, persistência na tabela `employee_events` via Flyway e todos os requisitos documentados. Crie testes unitários, sem testes integrados.
 - **Resultado/Decisão:** Foi adicionada a migration V6, o modelo de domínio `EmployeeEvent`, o caso de uso para processar eventos e os adapters JPA e Kafka. `EmployeeCreatedEvent` é persistido como `CREATION` com status `CREATED`; `EmployeeStatusChangedEvent` é persistido como `UPDATE` com status `ACTIVE`, `INACTIVE` ou `DELETED`. O `eventId` permite detectar reentregas e evitar duplicidade. O consumer usa confirmação manual e propaga falhas de processamento para que o evento não seja confirmado. O adapter de persistência grava com `saveAndFlush` em uma transação `REQUIRES_NEW`, fazendo com que falhas de escrita ou commit sejam propagadas antes do retorno ao consumer. Foram adicionados testes unitários de caso de uso, consumer e adapter de persistência.
 
+### 22. Testes Integrados do Fluxo RF05 + RF06
+
+- **Agente**: Copilot
+- **Prompt**: Crie testes integrados que insiram eventos em `outbox_events`, validem sua publicação pelo Outbox Poller no Kafka e o consumo e persistência em `employee_events`. Cubra também falhas, retries até o status `FAILED` e reentrega de eventos duplicados.
+- **Resultado/Decisão:** Foi criada uma suíte de integração com PostgreSQL e Kafka via Testcontainers para cobrir o fluxo ponta a ponta, incluindo publicação/consumo, mapeamento de eventos de criação e alteração de status, persistência no histórico, duplicidade e esgotamento das tentativas na outbox.

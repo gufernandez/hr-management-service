@@ -22,6 +22,8 @@
         <springdoc.version>2.6.0</springdoc.version>
         <logstash.encoder.version>7.4</logstash.encoder.version>
         <testcontainers.version>2.0.5</testcontainers.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
+        <commons-io.version>2.20.0</commons-io.version>
         <jacoco.version>0.8.12</jacoco.version>
     </properties>
 
@@ -33,6 +35,16 @@
                 <version>${testcontainers.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -103,6 +115,16 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
 

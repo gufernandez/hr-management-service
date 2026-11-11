@@ -41,7 +41,8 @@ spring:
 outbox:
   poller:
     enabled: ${OUTBOX_POLLER_ENABLED:true}
-    interval: ${OUTBOX_POLLER_INTERVAL:5s}
+    interval: ${OUTBOX_POLLER_INTERVAL:5000}
+    initial-delay: ${OUTBOX_POLLER_INITIAL_DELAY:0}
     max-retries: ${OUTBOX_POLLER_MAX_RETRIES:5}
   kafka:
     topic: ${KAFKA_EMPLOYEE_EVENTS_TOPIC:hr.employee-events.v1}

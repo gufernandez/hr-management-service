@@ -7,45 +7,94 @@ Comprehensive guide for building production-ready Spring Boot applications.
 ### Layered Architecture
 
 ```
-com.banco.hr
-├── domain                        # Core de Negócio (Java 21 puro, sem frameworks)
-│   ├── model
-│   │   ├── Employee.java
-│   │   ├── EmployeeId.java
-│   │   ├── EmployeeStatus.java
-│   │   ├── Email.java
-│   │   └── Cpf.java
-│   ├── event
-│   │   ├── DomainEvent.java
-│   │   ├── EmployeeCreatedEvent.java
-│   │   └── EmployeeStatusChangedEvent.java
-│   └── exception
-│       ├── DomainException.java
-│       └── EmployeeNotFoundException.java
+com.banco.hr/
+├── ManagementServiceApplication.java
 │
-├── application                   # Casos de Uso (Orquestração do Domínio)
-│   ├── ports
-│   │   ├── in                    # Primary / Driver Ports (Interfaces de Entrada)
+├── domain/                                 <-- Core Domain (100% Agnóstico / Sem Anotações Spring/JPA)
+│   ├── model/                              <-- Entidades Ricas e Agregados
+│   │   ├── employee/
+│   │   │   ├── Employee.java               <-- Aggregate Root
+│   │   │   ├── EmployeeId.java             <-- Value Object
+│   │   │   ├── EmployeeStatus.java         <-- Enum/VO
+│   │   │   └── Email.java                  <-- Value Object com validações de domínio
+│   │   ├── department/
+│   │   │   ├── Department.java
+│   │   │   └── CostCenterCode.java
+│   │   └── position/
+│   │       ├── Position.java
+│   │       └── PositionLevel.java
+│   │
+│   ├── exception/                          <-- Exceções de Regra de Negócio de Domínio
+│   │   ├── DomainException.java
+│   │   ├── EmployeeNotFoundException.java
+│   │   └── InvalidEmailException.java
+│   │
+│   └── service/                            <-- Domain Services (Regras que envolvem mais de um Agregado)
+│       └── EmployeeDomainService.java
+│
+├── application/                            <-- Casos de Uso & Ports
+│   ├── ports/                              <-- Contratos da Arquitetura Hexagonal
+│   │   ├── inbound/                        <-- Input Ports (Driven Interfaces chamadas pelos Controllers)
 │   │   │   ├── CreateEmployeeUseCase.java
-│   │   │   └── ChangeEmployeeStatusUseCase.java
-│   │   └── out                   # Secondary / Driven Ports (Interfaces de Saída)
+│   │   │   ├── InactivateEmployeeUseCase.java
+│   │   │   ├── ChangeEmployeeStatusUseCase.java
+│   │   │   └── FindEmployeeUseCase.java
+│   │   │
+│   │   └── outbound/                       <-- Output Ports (Driver Interfaces implementadas pela Infra)
 │   │       ├── EmployeeRepositoryPort.java
-│   │       ├── EventPublisherPort.java
-│   │       └── OutboxRepositoryPort.java
-│   └── usecase                   # Implementação pura dos Casos de Uso
+│   │       ├── DepartmentRepositoryPort.java
+│   │       ├── PositionRepositoryPort.java
+│   │       ├── OutboxEventRepositoryPort.java
+│   │       └── AuditLogRepositoryPort.java
+│   │
+│   └── usecase/                            <-- Implementação dos Casos de Uso (Application Services)
 │       ├── CreateEmployeeUseCaseImpl.java
-│       └── ChangeEmployeeStatusUseCaseImpl.java
+│       ├── InactivateEmployeeUseCaseImpl.java
+│       ├── ChangeEmployeeStatusUseCaseImpl.java
+│       └── FindEmployeeUseCaseImpl.java
 │
-└── infrastructure                # Adaptações Externas (Onde o Spring/Framework reside)
-    ├── adapters
-    │   ├── in
-    │   │   ├── web               # REST Controllers / DTOs
-    │   │   └── kafka             # Consumer Listeners
-    │   └── out
-    │       ├── persistence       # JPA Entities, Repositories e Mappers
-    │       └── messaging         # Kafka Producer e Outbox Poller
-    └── config                    # Injeção de dependências e Beans do Spring
-        └── ApplicationConfig.java
+└── infrastructure/                         <-- Adapters & Detalhes Técnicos (Frameworks, DB, Messaging)
+    ├── adapters/                           <-- Adapters de Entrada e Saída
+    │   ├── inbound/                        <-- Primary / Driving Adapters
+    │   │   ├── rest/                       <-- Controllers REST
+    │   │   │   ├── EmployeeController.java
+    │   │   │   ├── DepartmentController.java
+    │   │   │   ├── dto/                    <-- Requests, Responses, Mappers REST
+    │   │   │   │   ├── CreateEmployeeRequest.java
+    │   │   │   │   ├── EmployeeResponse.java
+    │   │   │   │   └── RestMapper.java
+    │   │   │   └── exception/              <-- GlobalExceptionHandler (@ControllerAdvice)
+    │   │   │       └── GlobalExceptionHandler.java
+    │   │   │
+    │   │   └── messaging/                  <-- Kafka Consumers / Listeners
+    │   │       ├── KafkaEmployeeConsumer.java
+    │   │       └── dto/
+    │   │           └── KafkaEventMessage.java
+    │   │
+    │   └── outbound/                       <-- Secondary / Driven Adapters
+    │       ├── persistence/                <-- Implementação de Banco de Dados (Spring Data JPA)
+    │       │   ├── entity/                 <-- Entidades de Banco (@Entity, @Table)
+    │       │   │   ├── EmployeeJpaEntity.java
+    │       │   │   ├── OutboxEventJpaEntity.java
+    │       │   │   └── EmployeeAuditJpaEntity.java
+    │       │   ├── repository/             <-- Spring Data Repositories (JpaRepository)
+    │       │   │   ├── SpringDataEmployeeRepository.java
+    │       │   │   └── SpringDataOutboxRepository.java
+    │       │   ├── mapper/                 <-- Mappers (Domain <-> JPA Entity)
+    │       │   │   └── EmployeePersistenceMapper.java
+    │       │   └── adapter/                <-- Implementação dos Output Ports
+    │       │       ├── EmployeeRepositoryAdapter.java
+    │       │       └── OutboxRepositoryAdapter.java
+    │       │
+    │       └── messaging/                  <-- Kafka Event Publisher Adapter
+    │           ├── KafkaEventPublisherAdapter.java
+    │           └── OutboxPollerScheduler.java  <-- Poller que lê PENDING e publica no Kafka
+    │
+    └── config/                             <-- Configurações Spring / Bean Definitions
+        ├── BeanConfiguration.java         <-- Injeção manual dos UseCases (sem poluir o domínio com @Service)
+        ├── KafkaConfig.java
+        ├── OpenAPIConfig.java
+        └── SecurityConfig.java (se aplicável)
 ```
 
 ### Package Naming Conventions

@@ -98,3 +98,28 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Após receber o CreatePositionCommand transforme os parâmetros title e level para titleCase. Assim ficará padronizado este formato ao salvar no banco. O objetivo é evitar que exista uma entrada: engenheiro  de software + junior e outra Engenheiro de Software + Junior no banco.
 - **Resultado/Decisão:** Os value objects normalizam título e nível para title case e reduzem espaços consecutivos antes de consultar duplicidade ou persistir. O título mantém a preposição `de` em minúscula, conforme o exemplo solicitado. Os testes de domínio, caso de uso e integração foram atualizados para verificar a forma armazenada e rejeitar entradas equivalentes após normalização. Os testes não foram executados.
+
+### 15. Implementação do RF03 - Camadas de Domínio e Aplicação
+
+- **Agente**: Copilot
+- **Prompt**: Vamos implementar o RF03 que consiste em 6 endpoints. Crie apenas os arquivos da application e domain layer, sem mexer na infraestrutura. Crie os testes unitários para testar apropriadamente o requisito e suas regras.
+- **Resultado/Decisão:** Foram implementados o agregado Employee, value objects, estados e regras de transição, além dos seis casos de uso: cadastro, listagem paginada, exclusão lógica, busca por departamento, ativação e desativação. O cadastro recebe departmentId e positionId como UUIDs, valida a existência das referências e a unicidade do e-mail, normalizado sem diferenciar caixa. As consultas paginadas usam offset/limit e excluem colaboradores DELETED. Ativar leva CREATED/INACTIVE a ACTIVE; desativar leva CREATED/ACTIVE a INACTIVE; transições inválidas são rejeitadas. Eventos do RF-04 e infraestrutura ficaram fora do escopo. Foram criados testes unitários de domínio e aplicação; não foram executados. A compilação também não foi verificada porque Maven e wrapper não estavam disponíveis no ambiente.
+
+### 16. Implementação do RF03 - Banco de Dados
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF03, crie a camada de infrastructure focando no banco de dados. Crie o arquivo Flyway para criação da tabela de employee, o mapeamento da entidade do DB em código e a integração com o use case previamente criado via repository. Crie também os testes unitários que validam as novas camadas. Atualize o arquivo AI_USAGE.md com a nossa iteração.
+- **Resultado/Decisão:** Foi criada a migration V4 da tabela `employee`, com unicidade de e-mail, chaves estrangeiras para departamento e cargo, status e timestamps de auditoria. Foram adicionadas entidade JPA, mapper, repositório, adapters para persistência e lookup das referências, paginação literal por offset/limit e configuração dos seis casos de uso. Testes unitários cobrem mapeamento, persistência, lookup e exclusão de registros DELETED nas consultas. Os testes não foram executados.
+
+### 17. Implementação do RF03 - Camada API
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF03, crie a camada de infrastructure focando na entrada via HTTP REST. Crie todos endpoints, integre com a camada de negócios. Crie testes unitários garantindo o funcionamento desta camada. Atualize o AI_USAGE.md a com nossa iteração.
+- **Resultado/Decisão:** Foram criados os seis endpoints versionados em `/api/v1/employees`: cadastro, listagem paginada ou não, exclusão lógica, busca paginada por nome do departamento, ativação e desativação. Os controllers convertem requests em comandos e agregados em DTOs; validação e mapeamento de erros seguem as regras da aplicação, com respostas HTTP para sucesso, dados inválidos, recursos ausentes e e-mail duplicado. Testes unitários MVC cobrem os fluxos de entrada, validação, paginação e erros. Os testes não foram executados.
+
+### 18. Testes Integrados do RF03 - API e Banco de Dados
+
+- **Agente**: Copilot
+- **Prompt**: Considere o RF03, crie fluxos de testes integrados que enviarão requests ao /employees e validarão a resposta e a persistência no banco de dados para todos endpoints. Valide cenários de sucesso e de erros. Atualize o AI_USAGE em seguida.
+- **Resultado/Decisão:** Foi criada uma suíte de integração com requests HTTP reais para os seis endpoints de `/api/v1/employees`, usando PostgreSQL via Testcontainers. Os cenários validam criação, listagem paginada e não paginada, busca paginada por departamento, exclusão lógica, ativação e desativação, verificando respostas e estado persistido. Também são cobertos e-mail duplicado, payload inválido, referências/departamento inexistentes, paginação inválida e transições de status proibidas. Os testes não foram executados.
+

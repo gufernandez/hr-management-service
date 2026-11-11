@@ -15,8 +15,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -67,6 +69,37 @@ class DepartmentRepositoryAdapterTest {
         // Verificação: o adaptador deve retornar o resultado do repositório sem alterá-lo.
         assertFalse(exists);
         verify(departmentJpaRepository).existsByName("People");
+    }
+
+    @Test
+    @DisplayName("Deve verificar existência do departamento pelo UUID")
+    void existsByIdDelegatesIdToJpaRepository() {
+        // Preparação: simula que o departamento referenciado existe no banco.
+        when(departmentJpaRepository.existsById(DEPARTMENT_ID)).thenReturn(true);
+
+        // Execução: valida a referência pelo contrato de lookup do domínio.
+        boolean exists = departmentRepositoryAdapter.existsById(new DepartmentId(DEPARTMENT_ID));
+
+        // Verificação: o identificador é encaminhado ao repositório JPA.
+        assertTrue(exists);
+        verify(departmentJpaRepository).existsById(DEPARTMENT_ID);
+    }
+
+    @Test
+    @DisplayName("Deve resolver o identificador de departamento pelo nome")
+    void findIdByNameReturnsDepartmentIdWhenFound() {
+        // Preparação: configura a entidade encontrada pelo nome normalizado.
+        DepartmentJpaEntity entity =
+                new DepartmentJpaEntity(DEPARTMENT_ID, "People", "CC-10", CREATED_AT);
+        when(departmentJpaRepository.findByName("People")).thenReturn(Optional.of(entity));
+
+        // Execução: resolve o identificador para a busca de colaboradores.
+        Optional<DepartmentId> result =
+                departmentRepositoryAdapter.findIdByName(new DepartmentName("People"));
+
+        // Verificação: retorna o UUID do departamento existente.
+        assertEquals(Optional.of(new DepartmentId(DEPARTMENT_ID)), result);
+        verify(departmentJpaRepository).findByName("People");
     }
 
     @Test

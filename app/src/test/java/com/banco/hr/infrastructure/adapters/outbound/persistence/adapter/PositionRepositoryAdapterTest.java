@@ -58,6 +58,20 @@ class PositionRepositoryAdapterTest {
     }
 
     @Test
+    @DisplayName("Deve verificar existência do cargo pelo UUID")
+    void existsByIdDelegatesIdToJpaRepository() {
+        // Preparação: simula cargo existente para validar o UUID usado no cadastro.
+        when(positionJpaRepository.existsById(POSITION_ID)).thenReturn(true);
+
+        // Execução: consulta a referência pela porta de lookup.
+        boolean exists = positionRepositoryAdapter.existsById(new PositionId(POSITION_ID));
+
+        // Verificação: o identificador é encaminhado ao repositório JPA.
+        assertTrue(exists);
+        verify(positionJpaRepository).existsById(POSITION_ID);
+    }
+
+    @Test
     @DisplayName("Deve mapear, persistir e devolver o cargo salvo")
     void saveMapsAndPersistsEntityThenReturnsMappedPosition() {
         // Preparação: configura o fluxo esperado entre domínio, mapper e repositório JPA.

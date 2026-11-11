@@ -74,3 +74,9 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Para o RF02, crie a camada de infrastructure focando no banco de dados. Crie o arquivo Flyway para criação da tabela de position, o mapeamento da entidade do DB em código e a integração com o use case previamente criado via repository. Crie também os testes unitários que validam as novas camadas. Atualize o arquivo AI_USAGE.md com a nossa iteração.
 - **Resultado/Decisão:** Foi criada a migration V2 para a tabela `position`, junto à entidade JPA, mapper e adapter que implementa `PositionRepositoryPort`. Os testes unitários cobrem o mapeamento dos campos e o fluxo de persistência, incluindo a propagação de falhas; nenhum teste foi executado a pedido do usuário.
+
+### 11. Implementação do RF02 - Camada API
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF02, crie a camada de infrastructure focando na entrada via HTTP REST. Crie o endpoint de criação de cargo integre com a camada de negócios. Crie testes unitários garantindo o funcionamento desta camada. Atualize o AI_USAGE.md a com nossa iteração.
+- **Resultado/Decisão:** Foi criado o endpoint `POST /api/v1/positions`, com validação de título e nível, resposta `201 Created`, cabeçalho `Location` e timestamp formatado no fuso do projeto. O caso de uso foi registrado como bean para integração via injeção de dependência. Os testes unitários cobrem sucesso e rejeição de campos obrigatórios vazios; não foram executados.

@@ -178,6 +178,27 @@ class EmployeeRepositoryAdapterTest {
     }
 
     @Test
+    @DisplayName("Deve buscar todos os colaboradores não deletados por departamento")
+    void findNotDeletedByDepartmentWithoutPaginationMapsResults() {
+        // Preparação: configura lista ordenada retornada pelo repositório JPA.
+        EmployeeJpaEntity entity = entity();
+        Employee employee = employee();
+        when(employeeJpaRepository.findAllByDepartmentIdAndStatusNotOrderByCreatedAtDesc(
+                DEPARTMENT_UUID, EmployeeStatus.DELETED)).thenReturn(List.of(entity));
+        when(employeePersistenceMapper.toDomain(entity)).thenReturn(employee);
+
+        // Execução: consulta colaboradores sem fornecer parâmetros de paginação.
+        List<Employee> result = employeeRepositoryAdapter.findNotDeletedByDepartment(
+                new DepartmentId(DEPARTMENT_UUID));
+
+        // Verificação: mapeia o conteúdo e restringe a consulta ao departamento não deletado.
+        assertEquals(List.of(employee), result);
+        verify(employeeJpaRepository).findAllByDepartmentIdAndStatusNotOrderByCreatedAtDesc(
+                DEPARTMENT_UUID, EmployeeStatus.DELETED);
+        verify(employeePersistenceMapper).toDomain(entity);
+    }
+
+    @Test
     @DisplayName("Deve traduzir violação de e-mail único para exceção de domínio")
     void saveTranslatesDuplicateEmailConstraintViolation() {
         // Preparação: simula inserção concorrente que já ocupou o mesmo e-mail.

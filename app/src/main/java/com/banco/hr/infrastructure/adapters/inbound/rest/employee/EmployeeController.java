@@ -117,10 +117,20 @@ public class EmployeeController {
     @ApiResponse(responseCode = "200", description = "Busca concluída com sucesso.")
     @ApiResponse(responseCode = "400", description = "Os parâmetros de paginação são inválidos.")
     @ApiResponse(responseCode = "404", description = "Departamento não encontrado.")
-    public ResponseEntity<EmployeePageResponse> searchByDepartment(
+    public ResponseEntity<?> searchByDepartment(
             @RequestParam("department") String departmentName,
-            @RequestParam(name = "offset") long offset,
-            @RequestParam(name = "limit") int limit) {
+            @RequestParam(name = "offset", required = false) Long offset,
+            @RequestParam(name = "limit", required = false) Integer limit) {
+        if (offset == null && limit == null) {
+            List<EmployeeResponse> employees =
+                    searchEmployeesByDepartmentUseCase.searchByDepartment(departmentName).stream()
+                            .map(EmployeeResponse::fromEmployee)
+                            .toList();
+            return ResponseEntity.ok(employees);
+        }
+        if (offset == null || limit == null) {
+            throw new DomainException("Offset e limit devem ser informados juntos.");
+        }
         EmployeePageRequest pageRequest = new EmployeePageRequest(offset, limit);
         return ResponseEntity.ok(EmployeePageResponse.fromPage(
                 searchEmployeesByDepartmentUseCase.searchByDepartment(

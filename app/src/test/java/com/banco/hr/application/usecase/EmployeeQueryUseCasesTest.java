@@ -102,6 +102,24 @@ class EmployeeQueryUseCasesTest {
     }
 
     @Test
+    @DisplayName("Deve buscar todos os colaboradores não deletados sem paginação por departamento")
+    void searchByDepartmentWithoutPaginationReturnsAllNotDeletedEmployees() {
+        // Preparação: resolve o nome do departamento e configura uma lista completa.
+        DepartmentName departmentName = new DepartmentName("People");
+        List<Employee> expected = List.of();
+        when(departmentLookup.findIdByName(departmentName)).thenReturn(Optional.of(DEPARTMENT_ID));
+        when(employeeRepository.findNotDeletedByDepartment(DEPARTMENT_ID)).thenReturn(expected);
+
+        // Execução: busca os colaboradores omitindo os parâmetros de paginação.
+        List<Employee> result = searchUseCase.searchByDepartment("People");
+
+        // Verificação: o caso de uso retorna a lista consultada pelo ID resolvido.
+        assertEquals(expected, result);
+        verify(departmentLookup).findIdByName(departmentName);
+        verify(employeeRepository).findNotDeletedByDepartment(DEPARTMENT_ID);
+    }
+
+    @Test
     @DisplayName("Deve rejeitar departamento inexistente sem consultar colaboradores")
     void searchByDepartmentRejectsUnknownName() {
         // Preparação: o nome solicitado não está cadastrado.

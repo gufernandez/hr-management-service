@@ -23,4 +23,8 @@ public interface EmployeeJpaRepository extends JpaRepository<EmployeeJpaEntity, 
             UUID departmentId,
             EmployeeStatus status,
             Pageable pageable);
+
+    List<EmployeeJpaEntity> findAllByDepartmentIdAndStatusNotOrderByCreatedAtDesc(
+            UUID departmentId,
+            EmployeeStatus status);
 }

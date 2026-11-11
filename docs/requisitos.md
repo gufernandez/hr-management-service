@@ -46,7 +46,7 @@ Position (table = position) {
     **Regra de Domínio:** O campo status do Employee deve ser alterado para "DELETED";<br>
 
 - Buscar Colaboradores por Departamento (`GET /employees/search?department={departmentName}`).<br>
-    **Requisito Técnico:** Deve ser permitido a paginação dos resultados;<br>
+    **Requisito Técnico:** A paginação dos resultados é opcional;<br>
 
 - Ativar Cadastro do Colaborador (`POST /employees/{id}/activate`)<br>
     **Regra de Domínio:** O campo status do Employee deve ser alterado para "ACTIVE", apenas caso o status do funcionário seja "CREATED" ou "INACTIVE";<br>

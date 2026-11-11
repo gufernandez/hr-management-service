@@ -116,3 +116,10 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Para o RF03, crie a camada de infrastructure focando na entrada via HTTP REST. Crie todos endpoints, integre com a camada de negócios. Crie testes unitários garantindo o funcionamento desta camada. Atualize o AI_USAGE.md a com nossa iteração.
 - **Resultado/Decisão:** Foram criados os seis endpoints versionados em `/api/v1/employees`: cadastro, listagem paginada ou não, exclusão lógica, busca paginada por nome do departamento, ativação e desativação. Os controllers convertem requests em comandos e agregados em DTOs; validação e mapeamento de erros seguem as regras da aplicação, com respostas HTTP para sucesso, dados inválidos, recursos ausentes e e-mail duplicado. Testes unitários MVC cobrem os fluxos de entrada, validação, paginação e erros. Os testes não foram executados.
+
+### 18. Testes Integrados do RF03 - API e Banco de Dados
+
+- **Agente**: Copilot
+- **Prompt**: Considere o RF03, crie fluxos de testes integrados que enviarão requests ao /employees e validarão a resposta e a persistência no banco de dados para todos endpoints. Valide cenários de sucesso e de erros. Atualize o AI_USAGE em seguida.
+- **Resultado/Decisão:** Foi criada uma suíte de integração com requests HTTP reais para os seis endpoints de `/api/v1/employees`, usando PostgreSQL via Testcontainers. Os cenários validam criação, listagem paginada e não paginada, busca paginada por departamento, exclusão lógica, ativação e desativação, verificando respostas e estado persistido. Também são cobertos e-mail duplicado, payload inválido, referências/departamento inexistentes, paginação inválida e transições de status proibidas. Os testes não foram executados.
+

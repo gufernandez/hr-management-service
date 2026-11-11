@@ -270,6 +270,35 @@ class EmployeeControllerTest {
     }
 
     @Test
+    @DisplayName("Deve buscar colaboradores por departamento sem paginação")
+    void searchByDepartmentReturnsUnpagedEmployeesWhenPaginationIsOmitted() throws Exception {
+        // Preparação: configura a lista não paginada retornada pelo caso de uso.
+        when(searchEmployeesByDepartmentUseCase.searchByDepartment("Engenharia"))
+                .thenReturn(List.of(employee(EmployeeStatus.ACTIVE)));
+
+        // Execução e verificação: a resposta não paginada é uma lista simples.
+        mockMvc.perform(get("/api/v1/employees/search")
+                        .param("department", "Engenharia"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(EMPLOYEE_ID.toString()))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"));
+
+        verify(searchEmployeesByDepartmentUseCase).searchByDepartment("Engenharia");
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar busca com apenas um parâmetro de paginação")
+    void searchByDepartmentRejectsPartialPagination() throws Exception {
+        // Execução e verificação: offset e limit precisam ser informados em conjunto.
+        mockMvc.perform(get("/api/v1/employees/search")
+                        .param("department", "Engenharia")
+                        .param("offset", "0"))
+                .andExpect(status().isBadRequest());
+
+        verify(searchEmployeesByDepartmentUseCase, never()).searchByDepartment("Engenharia");
+    }
+
+    @Test
     @DisplayName("Deve ativar cadastro e retornar status atualizado")
     void activateReturnsUpdatedEmployee() throws Exception {
         // Preparação: configura o agregado após a transição para ACTIVE.

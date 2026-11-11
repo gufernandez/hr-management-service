@@ -85,6 +85,16 @@ public class EmployeeRepositoryAdapter implements EmployeeRepositoryPort {
         return toEmployeePage(page, pageRequest);
     }
 
+    @Override
+    public List<Employee> findNotDeletedByDepartment(DepartmentId departmentId) {
+        return employeeJpaRepository
+                .findAllByDepartmentIdAndStatusNotOrderByCreatedAtDesc(
+                        departmentId.value(), EmployeeStatus.DELETED)
+                .stream()
+                .map(employeePersistenceMapper::toDomain)
+                .toList();
+    }
+
     private OffsetLimitPageable pageable(EmployeePageRequest pageRequest) {
         return new OffsetLimitPageable(pageRequest.offset(), pageRequest.limit());
     }

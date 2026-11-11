@@ -25,4 +25,6 @@ public interface EmployeeRepositoryPort {
     EmployeePage findNotDeletedByDepartment(
             DepartmentId departmentId,
             EmployeePageRequest pageRequest);
+
+    List<Employee> findNotDeletedByDepartment(DepartmentId departmentId);
 }

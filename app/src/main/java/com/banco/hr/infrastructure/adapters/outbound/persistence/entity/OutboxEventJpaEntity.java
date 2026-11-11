@@ -104,4 +104,17 @@ public class OutboxEventJpaEntity {
     public int getRetryCount() {
         return retryCount;
     }
+
+    public void markPublished(Instant publishedAt) {
+        this.processingStatus = OutboxProcessingStatus.PUBLISHED;
+        this.publishedAt = publishedAt;
+    }
+
+    public void incrementRetryCount() {
+        this.retryCount++;
+    }
+
+    public void markFailed() {
+        this.processingStatus = OutboxProcessingStatus.FAILED;
+    }
 }

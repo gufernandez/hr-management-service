@@ -110,3 +110,9 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Para o RF03, crie a camada de infrastructure focando no banco de dados. Crie o arquivo Flyway para criação da tabela de employee, o mapeamento da entidade do DB em código e a integração com o use case previamente criado via repository. Crie também os testes unitários que validam as novas camadas. Atualize o arquivo AI_USAGE.md com a nossa iteração.
 - **Resultado/Decisão:** Foi criada a migration V4 da tabela `employee`, com unicidade de e-mail, chaves estrangeiras para departamento e cargo, status e timestamps de auditoria. Foram adicionadas entidade JPA, mapper, repositório, adapters para persistência e lookup das referências, paginação literal por offset/limit e configuração dos seis casos de uso. Testes unitários cobrem mapeamento, persistência, lookup e exclusão de registros DELETED nas consultas. Os testes não foram executados.
+
+### 17. Implementação do RF03 - Camada API
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF03, crie a camada de infrastructure focando na entrada via HTTP REST. Crie todos endpoints, integre com a camada de negócios. Crie testes unitários garantindo o funcionamento desta camada. Atualize o AI_USAGE.md a com nossa iteração.
+- **Resultado/Decisão:** Foram criados os seis endpoints versionados em `/api/v1/employees`: cadastro, listagem paginada ou não, exclusão lógica, busca paginada por nome do departamento, ativação e desativação. Os controllers convertem requests em comandos e agregados em DTOs; validação e mapeamento de erros seguem as regras da aplicação, com respostas HTTP para sucesso, dados inválidos, recursos ausentes e e-mail duplicado. Testes unitários MVC cobrem os fluxos de entrada, validação, paginação e erros. Os testes não foram executados.

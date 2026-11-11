@@ -19,7 +19,7 @@ Department (table = department) {
 ```
 
 #### **RF-02: Gestão de Cargos**
-- Cadastrar Cargo (`POST /departments`) com id, title, level (ex: Junior, Pleno, Senior).
+- Cadastrar Cargo (`POST /positions`) com id, title, level (ex: Junior, Pleno, Senior).
 
 ```
 Position (table = department) {

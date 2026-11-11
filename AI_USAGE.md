@@ -62,3 +62,9 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Altere a pipeline atual do Github Actions para incluir como comentário a cobertura de testes do PR.
 - **Resultado/Decisão:** Ao abrir PR, os jobs irão executar e a cobertura de testes será exibida, assim facilitando a avaliação pelo review.
+
+### 9. Implementação do RF02 - Camada de Negócio
+
+- **Agente**: Copilot
+- **Prompt**: Vamos implementar o RF02 que permite a criação de cargos. Crie apenas os arquivos da application e domain layer, sem mexer na infraestrutura. Crie os testes unitários para testar apropriadamente o requisito e suas regras. Atualize o arquivo AI_USAGE.md com a nossa iteração.
+- **Resultado/Decisão:** Foram criados os value objects de título e nível, o agregado Cargo e seu caso de uso de criação com persistência via porta de saída. Os testes cobrem geração de identificador e data, normalização e campos obrigatórios; o nível permanece como texto, sem restringir os valores aos exemplos do requisito.

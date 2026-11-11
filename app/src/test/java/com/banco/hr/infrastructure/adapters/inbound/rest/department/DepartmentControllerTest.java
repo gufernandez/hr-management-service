@@ -1,5 +1,29 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.department;
 
+import java.time.Instant;
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.endsWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
 import com.banco.hr.application.ports.inbound.CreateDepartmentCommand;
 import com.banco.hr.application.ports.inbound.CreateDepartmentUseCase;
 import com.banco.hr.domain.exception.DepartmentAlreadyExistsException;
@@ -7,30 +31,6 @@ import com.banco.hr.domain.model.department.CostCenterCode;
 import com.banco.hr.domain.model.department.Department;
 import com.banco.hr.domain.model.department.DepartmentId;
 import com.banco.hr.domain.model.department.DepartmentName;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-
-import java.time.Instant;
-import java.util.UUID;
-
-import static org.hamcrest.Matchers.endsWith;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class DepartmentControllerTest {
@@ -46,6 +46,7 @@ class DepartmentControllerTest {
     private MockMvc mockMvc;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
         // Preparação: configura MVC isolado com validação e caso de uso substituído por mock.
         validator = new LocalValidatorFactoryBean();

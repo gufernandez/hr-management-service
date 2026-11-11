@@ -31,6 +31,7 @@ Estas são diretrizes que os agentes devem seguir ao gerar código para a aplica
 - Testes de integração com banco real (recomenda-se Testcontainers) 
 - Testes de eventos (publicação e consumo) 
 - Cobertura mínima sugerida: **80%**
+- Para todos os testes do código, crie títulos via @DisplayName descritivos de cada teste e inclua anotações explicando o que é esperado e o motivo de cada trecho.
 
 ## Versionamento de API
 - Todos os endpoints REST devem ser versionados via URI usando o prefixo `/api/v1/` (ex: `/api/v1/employees`).
@@ -44,3 +45,7 @@ Estas são diretrizes que os agentes devem seguir ao gerar código para a aplica
 - Todos os Controllers REST devem conter anotações do Springdoc (`@Operation`, `@ApiResponse`).
 - O Swagger UI deve estar disponível publicamente no caminho `/swagger-ui.html`.
 - O link de acesso direto deve estar destacado no `README.md`.
+
+## Formatação de Timestamp
+- O fuso do projeto deve ser America/Sao_Paulo (GMT-3).
+- Ao mapear Instant ou Timestamp para JSON, utilize o formato ISO 8601 com offset de fuso horário (ex: `2024-01-01T12:00:00-03:00`).

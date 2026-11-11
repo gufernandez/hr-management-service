@@ -1,6 +1,8 @@
 spring:
   application:
     name: employees-manager
+  jackson:
+    time-zone: America/Sao_Paulo
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:

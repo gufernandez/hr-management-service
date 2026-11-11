@@ -32,6 +32,13 @@ Estas são diretrizes que os agentes devem seguir ao gerar código para a aplica
 - Testes de eventos (publicação e consumo) 
 - Cobertura mínima sugerida: **80%**
 - Para todos os testes do código, crie títulos via @DisplayName descritivos de cada teste e inclua anotações explicando o que é esperado e o motivo de cada trecho.
+- Considere os warnings do SonarQube e corrija-os, mesmo que não sejam obrigatórios para a aprovação do PR. Exemplos:
+  - Null type safety: The expression of type 'Matcher<String>' needs unchecked conversion to conform to '@NonNull Matcher<? super String>'
+  - Null type safety: The expression of type 'MediaType' needs unchecked conversion to conform to '@NonNull MediaType'
+  - Throwable method result is ignored
+  - Add @SuppressWarnings("unused") when necessary to avoid warnings for unused methods or variables in tests.
+  - Always assert object is not null before accessing its properties in tests, e.g., assertNotNull(response.getBody()) before accessing response.getBody().id().
+  - Dereferencing possible null pointer
 
 ## Versionamento de API
 - Todos os endpoints REST devem ser versionados via URI usando o prefixo `/api/v1/` (ex: `/api/v1/employees`).

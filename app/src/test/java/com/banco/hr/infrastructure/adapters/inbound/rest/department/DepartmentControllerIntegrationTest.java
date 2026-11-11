@@ -1,5 +1,6 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.department;
 
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -50,6 +51,7 @@ class DepartmentControllerIntegrationTest {
     private Environment environment;
 
     @DynamicPropertySource
+    @SuppressWarnings("unused") // Invoked by Spring TestContext through @DynamicPropertySource.
     static void configurePostgres(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
@@ -57,6 +59,7 @@ class DepartmentControllerIntegrationTest {
     }
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void cleanDatabase() {
         // Preparação: cada cenário começa sem departamentos para isolar as verificações de estado.
         departmentRepository.deleteAll();
@@ -75,13 +78,14 @@ class DepartmentControllerIntegrationTest {
 
         // Verificação: o endpoint deve retornar o recurso e um Location com o identificador gerado.
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
         DepartmentResponse body = response.getBody();
+        assertNotNull(body);
         assertNotNull(body.id());
         assertEquals("People", body.name());
         assertEquals("CC-10", body.costCenterCode());
-        assertNotNull(response.getHeaders().getLocation());
-        assertTrue(response.getHeaders().getLocation().toString().endsWith(body.id().toString()));
+        URI location = response.getHeaders().getLocation();
+        assertNotNull(location);
+        assertTrue(location.toString().endsWith(body.id().toString()));
 
         // Verificação: o timestamp da resposta é ISO 8601 e mantém o offset do horário de Brasília.
         assertEquals(ZoneOffset.ofHours(-3), OffsetDateTime.parse(body.createdAt()).getOffset());

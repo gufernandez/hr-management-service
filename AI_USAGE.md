@@ -62,3 +62,39 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Altere a pipeline atual do Github Actions para incluir como comentário a cobertura de testes do PR.
 - **Resultado/Decisão:** Ao abrir PR, os jobs irão executar e a cobertura de testes será exibida, assim facilitando a avaliação pelo review.
+
+### 9. Implementação do RF02 - Camada de Negócio
+
+- **Agente**: Copilot
+- **Prompt**: Vamos implementar o RF02 que permite a criação de cargos. Crie apenas os arquivos da application e domain layer, sem mexer na infraestrutura. Crie os testes unitários para testar apropriadamente o requisito e suas regras. Atualize o arquivo AI_USAGE.md com a nossa iteração.
+- **Resultado/Decisão:** Foram criados os value objects de título e nível, o agregado Cargo e seu caso de uso de criação com persistência via porta de saída. Os testes cobrem geração de identificador e data, normalização e campos obrigatórios; o nível permanece como texto, sem restringir os valores aos exemplos do requisito.
+
+### 10. Implementação do RF02 - Banco de Dados
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF02, crie a camada de infrastructure focando no banco de dados. Crie o arquivo Flyway para criação da tabela de position, o mapeamento da entidade do DB em código e a integração com o use case previamente criado via repository. Crie também os testes unitários que validam as novas camadas. Atualize o arquivo AI_USAGE.md com a nossa iteração.
+- **Resultado/Decisão:** Foi criada a migration V2 para a tabela `position`, junto à entidade JPA, mapper e adapter que implementa `PositionRepositoryPort`. Os testes unitários cobrem o mapeamento dos campos e o fluxo de persistência, incluindo a propagação de falhas; nenhum teste foi executado a pedido do usuário.
+
+### 11. Implementação do RF02 - Camada API
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF02, crie a camada de infrastructure focando na entrada via HTTP REST. Crie o endpoint de criação de cargo integre com a camada de negócios. Crie testes unitários garantindo o funcionamento desta camada. Atualize o AI_USAGE.md a com nossa iteração.
+- **Resultado/Decisão:** Foi criado o endpoint `POST /api/v1/positions`, com validação de título e nível, resposta `201 Created`, cabeçalho `Location` e timestamp formatado no fuso do projeto. O caso de uso foi registrado como bean para integração via injeção de dependência. Os testes unitários cobrem sucesso e rejeição de campos obrigatórios vazios; não foram executados.
+
+### 12. Implementação do RF02 - Teste Integrado
+
+- **Agente**: Copilot
+- **Prompt**: Considere o RF02, crie fluxos de testes integrados que enviarão requests ao /positions e validarão a resposta e a persistência no banco de dados. Valide cenários de sucesso e de erros. Atualize o item 12 do AI_USAGE em seguida.
+- **Resultado/Decisão:** Foi criado teste de integração com requests HTTP reais para `/api/v1/positions` usando PostgreSQL via Testcontainers. Os cenários validam criação, resposta `201`, `Location`, fuso do timestamp e persistência de todos os campos, além de rejeição com `400` para título e nível em branco sem persistir registros. Os testes não foram executados.
+
+### 13. Regra de unicidade do RF02
+
+- **Agente**: Copilot
+- **Prompt**: Vamos alterar o RF02. Caso já exista um cargo de mesmo title E level, não é necessário criar um novo. Altere os arquivos e testes para refletir esta alteração e responda devidamente ao usuário.
+- **Resultado/Decisão:** A criação verifica a combinação normalizada de título e nível e responde HTTP 409 quando ela já existe. Foi adicionada constraint única no banco para proteger contra duplicações concorrentes; a violação dessa combinação é traduzida para a mesma exceção de domínio. Testes cobrem o caso duplicado, as demais combinações válidas e a resposta HTTP. Os testes não foram executados.
+
+### 14. Normalização de título e nível do RF02
+
+- **Agente**: Copilot
+- **Prompt**: Após receber o CreatePositionCommand transforme os parâmetros title e level para titleCase. Assim ficará padronizado este formato ao salvar no banco. O objetivo é evitar que exista uma entrada: engenheiro  de software + junior e outra Engenheiro de Software + Junior no banco.
+- **Resultado/Decisão:** Os value objects normalizam título e nível para title case e reduzem espaços consecutivos antes de consultar duplicidade ou persistir. O título mantém a preposição `de` em minúscula, conforme o exemplo solicitado. Os testes de domínio, caso de uso e integração foram atualizados para verificar a forma armazenada e rejeitar entradas equivalentes após normalização. Os testes não foram executados.

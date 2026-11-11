@@ -30,6 +30,9 @@ O serviço `app-test` executa os testes unitários e de integração. Os testes 
 Ao subir os containers, o teste é automaticamente executado, caso queira executá-los novamente:
 
 ```bash
+# Sobe o container de testes atualizado
+docker compose build --no-cache app-test
+
 # Executar testes unitários e de integração
 docker compose run --rm app-test mvn clean verify
 ```

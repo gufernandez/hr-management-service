@@ -40,7 +40,7 @@ Position (table = position) {
     **Regra de Domínio:** O campo status deve ser criado como "CREATED";<br>
 
 - Listar Colaboradores (`GET /employees`).   
-    **Requisito Técnico:** Deve ser permitido a paginação dos resultados;<br>
+    **Requisito Técnico:** A paginação dos resultados é opcional;<br>
 
 - Inativar Colaborador (`DELETE /employees/{id}`).   
     **Regra de Domínio:** O campo status do Employee deve ser alterado para "DELETED";<br>
@@ -49,10 +49,10 @@ Position (table = position) {
     **Requisito Técnico:** Deve ser permitido a paginação dos resultados;<br>
 
 - Ativar Cadastro do Colaborador (`POST /employees/{id}/activate`)<br>
-    **Regra de Domínio:** O campo status do Employee deve ser alterado para "INACTIVE", apenas caso o status do funcionário seja "CREATED" ou "ACTIVE";<br>
+    **Regra de Domínio:** O campo status do Employee deve ser alterado para "ACTIVE", apenas caso o status do funcionário seja "CREATED" ou "INACTIVE";<br>
 
 - Desativar Cadastro do Colaborador (`POST /employees/{id}/deactivate`)<br>
-    **Regra de Domínio:** O campo status do Employee deve ser alterado para "ACTIVE", apenas caso o status do funcionário seja "CREATED" ou "INACTIVE";<br>
+    **Regra de Domínio:** O campo status do Employee deve ser alterado para "INACTIVE", apenas caso o status do funcionário seja "CREATED" ou "ACTIVE";<br>
 
 ```
 Employee (table = employee) {

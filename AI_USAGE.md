@@ -98,3 +98,15 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Após receber o CreatePositionCommand transforme os parâmetros title e level para titleCase. Assim ficará padronizado este formato ao salvar no banco. O objetivo é evitar que exista uma entrada: engenheiro  de software + junior e outra Engenheiro de Software + Junior no banco.
 - **Resultado/Decisão:** Os value objects normalizam título e nível para title case e reduzem espaços consecutivos antes de consultar duplicidade ou persistir. O título mantém a preposição `de` em minúscula, conforme o exemplo solicitado. Os testes de domínio, caso de uso e integração foram atualizados para verificar a forma armazenada e rejeitar entradas equivalentes após normalização. Os testes não foram executados.
+
+### 15. Implementação do RF03 - Camadas de Domínio e Aplicação
+
+- **Agente**: Copilot
+- **Prompt**: Vamos implementar o RF03 que consiste em 6 endpoints. Crie apenas os arquivos da application e domain layer, sem mexer na infraestrutura. Crie os testes unitários para testar apropriadamente o requisito e suas regras.
+- **Resultado/Decisão:** Foram implementados o agregado Employee, value objects, estados e regras de transição, além dos seis casos de uso: cadastro, listagem paginada, exclusão lógica, busca por departamento, ativação e desativação. O cadastro recebe departmentId e positionId como UUIDs, valida a existência das referências e a unicidade do e-mail, normalizado sem diferenciar caixa. As consultas paginadas usam offset/limit e excluem colaboradores DELETED. Ativar leva CREATED/INACTIVE a ACTIVE; desativar leva CREATED/ACTIVE a INACTIVE; transições inválidas são rejeitadas. Eventos do RF-04 e infraestrutura ficaram fora do escopo. Foram criados testes unitários de domínio e aplicação; não foram executados. A compilação também não foi verificada porque Maven e wrapper não estavam disponíveis no ambiente.
+
+### 16. Paginação opcional na listagem de colaboradores
+
+- **Agente**: Copilot
+- **Prompt**: Ao listar os funcionários, a paginação pode ser opcional.
+- **Resultado/Decisão:** A porta e o caso de uso de listagem agora oferecem uma operação sem parâmetros de paginação, que retorna todos os colaboradores não deletados, mantendo também a operação paginada. A busca por departamento continua paginada. Foi atualizado o requisito e incluído teste unitário para o fluxo sem paginação. Os testes não foram executados.

@@ -28,12 +28,17 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./app/reports:/reports
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hr_db
       - SPRING_DATASOURCE_USERNAME=hr_user
       - SPRING_DATASOURCE_PASSWORD=hr_password
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

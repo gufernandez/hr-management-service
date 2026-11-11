@@ -53,8 +53,12 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Prompt**: Para o RF01, crie a camada de infrastructure focando na entrada via HTTP REST. Crie o endpoint de criação de departamento integre com a camada de negócios. Crie testes unitários garantindo o funcionamento desta camada.
 - **Resultado/Decisão:** O endpoint de criação de departamento foi criado com seus devidos testes unitários. Foi necessário ajustes na formatação do timestamp com a IA e na localização adequada de alguns métodos.
 
+### 7. Implementação do RF01 - Teste Integrado
+- **Agente**: Copilot
+- **Prompt**: Considere o RF01, crie fluxos de testes integrados que enviarão requests ao serviço e validarão a resposta e a persistência no banco de dados. Valide cenários de sucesso e de erros.
+- **Resultado/Decisão:** O teste integrado foi criado validando o uso do endpoint de criação de departamentos de ponta a ponta.
 
-### 7. Melhoria de Pipelien - Cobertura de Testes
+### 8. Melhoria de Pipeline - Cobertura de Testes
 - **Agente**: Copilot
 - **Prompt**: Altere a pipeline atual do Github Actions para incluir como comentário a cobertura de testes do PR.
 - **Resultado/Decisão:** Ao abrir PR, os jobs irão executar e a cobertura de testes será exibida, assim facilitando a avaliação pelo review.

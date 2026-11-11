@@ -36,7 +36,7 @@ class DepartmentTest {
     @DisplayName("Deve rejeitar identificador de departamento nulo")
     void departmentIdRejectsNullValue() {
         // Verificação: um ID sem UUID é inválido e deve ser rejeitado pelo value object.
-        assertThrows(NullPointerException.class, () -> new DepartmentId(null));
+        assertNotNull(assertThrows(NullPointerException.class, () -> new DepartmentId(null)));
     }
 
     @Test

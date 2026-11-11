@@ -25,12 +25,13 @@ docker compose down
 
 ### 2. Testes Unitários
 
-Criei um Dockerfile.dev específico para testes unitários de nossa aplicação. Após subir todos containers, basta rodar o comando:
+O serviço `app-test` executa os testes unitários e de integração. Os testes de integração usam Testcontainers para iniciar um PostgreSQL isolado; por isso, mantenha o Docker Desktop (ou Docker Engine) iniciado. O serviço monta o socket Docker do host e configura o endereço usado pelo Testcontainers para acessar as portas publicadas.
+
+Ao subir os containers, o teste é automaticamente executado, caso queira executá-los novamente:
 
 ```bash
-# Executar testes
-docker compose run --rm app-test
-
+# Executar testes unitários e de integração
+docker compose run --rm app-test mvn clean verify
 ```
 
-Os reports do Jacoco e Surefire podem ser vistos na pasta app/reports.
+Os relatórios do JaCoCo e do Surefire podem ser vistos na pasta `app/reports`. O Testcontainers precisa de acesso ao socket Docker; execute apenas testes e código confiáveis pelo serviço `app-test`.

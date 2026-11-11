@@ -6,15 +6,17 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 import com.banco.hr.application.ports.outbound.PositionRepositoryPort;
+import com.banco.hr.application.ports.outbound.PositionLookupPort;
 import com.banco.hr.domain.exception.PositionAlreadyExistsException;
 import com.banco.hr.domain.model.position.Position;
+import com.banco.hr.domain.model.position.PositionId;
 import com.banco.hr.domain.model.position.PositionLevel;
 import com.banco.hr.domain.model.position.PositionTitle;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.mapper.PositionPersistenceMapper;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.PositionJpaRepository;
 
 @Repository
-public class PositionRepositoryAdapter implements PositionRepositoryPort {
+public class PositionRepositoryAdapter implements PositionRepositoryPort, PositionLookupPort {
 
     private final PositionJpaRepository positionJpaRepository;
     private final PositionPersistenceMapper positionPersistenceMapper;
@@ -29,6 +31,11 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
     @Override
     public boolean existsByTitleAndLevel(PositionTitle title, PositionLevel level) {
         return positionJpaRepository.existsByTitleAndLevel(title.value(), level.value());
+    }
+
+    @Override
+    public boolean existsById(PositionId positionId) {
+        return positionJpaRepository.existsById(positionId.value());
     }
 
     @Override

@@ -12,8 +12,12 @@ Este é um desafio técnico para uma vaga de Engenheiro(a) de Software Sênior.
 - OpenAPI Docs: http://localhost:8080/api-docs
 - Spring Actuator Health: http://localhost:8080/actuator/health
 - Spring Actuator Metrics: http://localhost:8080/actuator/metrics
+- Spring Actuator Prometheus: http://localhost:8080/actuator/prometheus
 - SonarQube Dashboard: http://localhost:9000 (Default login: admin / admin)
 
+As métricas de duração das operações da aplicação ficam disponíveis em
+`/actuator/metrics/hr.operation.duration`, com filtros por `component`, `method` e `outcome`.
+O endpoint Prometheus expõe histogramas para análise de latência e percentis.
 
 ## 1. Definindo passo a passo
 

@@ -47,3 +47,14 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Para o RF01, crie a camada de infrastructure focando no banco de dados. Crie o arquivo Flyway para criação da tabela de departamento, o mapeamento da entidade do DB em código e a integração com o use case previamente criado via repository. Crie também os testes unitários que validam as novas camadas.
 - **Resultado/Decisão:** Os campos de texto no SQL utilizarão TEXT já que no PostgreSQL o tipo TEXT e o VARCHAR utilizam exatamente o mesmo mecanismo de alocação de memória e usar TEXT evita alterar migrações do banco (via Flyway) no futuro caso o tamanho de um campo de nome de departamento precise expandir de 50 para 100 caracteres.
+
+### 6. Implementação do RF01 - Camada API
+- **Agente**: Copilot
+- **Prompt**: Para o RF01, crie a camada de infrastructure focando na entrada via HTTP REST. Crie o endpoint de criação de departamento integre com a camada de negócios. Crie testes unitários garantindo o funcionamento desta camada.
+- **Resultado/Decisão:** O endpoint de criação de departamento foi criado com seus devidos testes unitários. Foi necessário ajustes na formatação do timestamp com a IA e na localização adequada de alguns métodos.
+
+
+### 7. Melhoria de Pipelien - Cobertura de Testes
+- **Agente**: Copilot
+- **Prompt**: Altere a pipeline atual do Github Actions para incluir como comentário a cobertura de testes do PR.
+- **Resultado/Decisão:** Ao abrir PR, os jobs irão executar e a cobertura de testes será exibida, assim facilitando a avaliação pelo review.

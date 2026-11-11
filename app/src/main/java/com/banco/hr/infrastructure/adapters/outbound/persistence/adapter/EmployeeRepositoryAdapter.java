@@ -10,28 +10,38 @@ import com.banco.hr.domain.model.employee.Employee;
 import com.banco.hr.domain.model.employee.EmployeeId;
 import com.banco.hr.domain.model.employee.EmployeeStatus;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.EmployeeJpaEntity;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEventJpaEntity;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEventType;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxProcessingStatus;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.mapper.EmployeePersistenceMapper;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.EmployeeJpaRepository;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.OutboxEventJpaRepository;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.OffsetLimitPageable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class EmployeeRepositoryAdapter implements EmployeeRepositoryPort {
 
     private final EmployeeJpaRepository employeeJpaRepository;
     private final EmployeePersistenceMapper employeePersistenceMapper;
+    private final OutboxEventJpaRepository outboxEventJpaRepository;
 
     public EmployeeRepositoryAdapter(
             EmployeeJpaRepository employeeJpaRepository,
-            EmployeePersistenceMapper employeePersistenceMapper) {
+            EmployeePersistenceMapper employeePersistenceMapper,
+            OutboxEventJpaRepository outboxEventJpaRepository) {
         this.employeeJpaRepository = Objects.requireNonNull(employeeJpaRepository);
         this.employeePersistenceMapper = Objects.requireNonNull(employeePersistenceMapper);
+        this.outboxEventJpaRepository = Objects.requireNonNull(outboxEventJpaRepository);
     }
 
     @Override
@@ -46,12 +56,17 @@ public class EmployeeRepositoryAdapter implements EmployeeRepositoryPort {
     }
 
     @Override
+    @Transactional
     public Employee save(Employee employee) {
+        Objects.requireNonNull(employee);
+        EmployeeStatus previousStatus = employeeJpaRepository.findById(employee.id().value())
+                .map(EmployeeJpaEntity::getStatus)
+                .orElse(null);
+        EmployeeJpaEntity savedEntity;
         try {
-            var savedEntity = Objects.requireNonNull(
+            savedEntity = Objects.requireNonNull(
                     employeeJpaRepository.save(employeePersistenceMapper.toEntity(employee)),
                     "O repositório JPA deve retornar o colaborador salvo.");
-            return employeePersistenceMapper.toDomain(savedEntity);
         } catch (DataIntegrityViolationException exception) {
             if (employeeJpaRepository.existsByEmail(employee.email().value())
                     && employeeJpaRepository.findById(employee.id().value()).isEmpty()) {
@@ -59,6 +74,26 @@ public class EmployeeRepositoryAdapter implements EmployeeRepositoryPort {
             }
             throw exception;
         }
+        if (previousStatus == null && employee.status() == EmployeeStatus.CREATED) {
+            persistOutboxEvent(employee, OutboxEventType.EMPLOYEE_CREATED);
+        } else if (previousStatus != null && previousStatus != employee.status()) {
+            persistOutboxEvent(employee, OutboxEventType.EMPLOYEE_STATUS_CHANGED);
+        }
+        return employeePersistenceMapper.toDomain(savedEntity);
+    }
+
+    private void persistOutboxEvent(Employee employee, OutboxEventType eventType) {
+        Instant eventTime = employee.lastUpdatedAt();
+        outboxEventJpaRepository.save(new OutboxEventJpaEntity(
+                UUID.randomUUID(),
+                employee.id().value(),
+                employee.status(),
+                eventTime,
+                eventType.value(),
+                OutboxProcessingStatus.PENDING,
+                eventTime,
+                null,
+                0));
     }
 
     @Override

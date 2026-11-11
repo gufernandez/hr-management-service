@@ -30,6 +30,14 @@ public final class Department {
         return new Department(DepartmentId.generate(), name, costCenterCode, createdAt);
     }
 
+    public static Department reconstitute(
+            DepartmentId id,
+            DepartmentName name,
+            CostCenterCode costCenterCode,
+            Instant createdAt) {
+        return new Department(id, name, costCenterCode, createdAt);
+    }
+
     public DepartmentId id() {
         return id;
     }

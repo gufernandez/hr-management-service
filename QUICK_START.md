@@ -28,5 +28,9 @@ docker compose down
 Criei um Dockerfile.dev específico para testes unitários de nossa aplicação. Após subir todos containers, basta rodar o comando:
 
 ```bash
+# Executar testes
 docker compose run --rm app-test
+
 ```
+
+Os reports do Jacoco e Surefire podem ser vistos na pasta app/reports.

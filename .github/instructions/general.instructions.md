@@ -31,6 +31,7 @@ Estas são diretrizes que os agentes devem seguir ao gerar código para a aplica
 - Testes de integração com banco real (recomenda-se Testcontainers) 
 - Testes de eventos (publicação e consumo) 
 - Cobertura mínima sugerida: **80%**
+- Para todos os testes do código, crie títulos via @DisplayName descritivos de cada teste e inclua anotações explicando o que é esperado e o motivo de cada trecho.
 
 ## Versionamento de API
 - Todos os endpoints REST devem ser versionados via URI usando o prefixo `/api/v1/` (ex: `/api/v1/employees`).

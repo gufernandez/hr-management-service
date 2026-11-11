@@ -10,6 +10,8 @@ jobs:
   build-and-test:
     name: Build, Run Tests & JaCoCo Coverage
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Repository
@@ -23,8 +25,14 @@ jobs:
           cache: maven
           cache-dependency-path: app/pom.xml
 
+      - name: Prepare JaCoCo report directory
+        run: |
+          sudo mkdir -p /reports/jacoco
+          sudo chown "$(id -u):$(id -g)" /reports/jacoco
+
       # Run unit & integration tests using system Maven (no wrapper required)
       - name: Build and Run Tests with Maven
+        id: tests
         working-directory: app
         run: mvn clean verify
 
@@ -33,8 +41,110 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-coverage-report
-          path: app/target/site/jacoco/
+          path: /reports/jacoco/
+          if-no-files-found: warn
 
       - name: Build Docker Image Validation
         working-directory: app
         run: docker build -t hr-management-service:latest .
+
+  publish-coverage:
+    name: Publish JaCoCo Coverage
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: always() && github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Download JaCoCo Coverage Report
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: jacoco-report
+          if-no-artifact-found: warn
+
+      - name: Publish JaCoCo coverage to pull request
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          TESTS_OUTCOME: ${{ needs.build-and-test.result }}
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'jacoco-report/jacoco.xml';
+            const testOutcome = process.env.TESTS_OUTCOME || 'unknown';
+            let coverage;
+
+            if (fs.existsSync(reportPath)) {
+              const xml = fs.readFileSync(reportPath, 'utf8');
+              const counters = [...xml.matchAll(/<counter type="LINE" missed="(\d+)" covered="(\d+)"\s*\/>/g)];
+              const lineCounter = counters.at(-1);
+
+              if (lineCounter) {
+                const missed = Number(lineCounter[1]);
+                const covered = Number(lineCounter[2]);
+                const total = missed + covered;
+                const percentage = total === 0 ? 0 : (covered / total * 100);
+                coverage = `**Cobertura de linhas:** ${percentage.toFixed(2)}% (${covered}/${total})`;
+              } else {
+                coverage = 'Cobertura indisponível: o XML não contém o contador de linhas.';
+              }
+            } else {
+              coverage = 'Cobertura indisponível: o relatório JaCoCo não foi gerado.';
+            }
+
+            const marker = '<!-- jacoco-coverage-report -->';
+            const body = [
+              marker,
+              '## Cobertura de testes (JaCoCo)',
+              '',
+              `**Resultado dos testes:** ${testOutcome}`,
+              '',
+              coverage,
+              '',
+              'O relatório completo está disponível no artefato `jacoco-coverage-report` desta execução.'
+            ].join('\n');
+
+            await core.summary
+              .addHeading('Cobertura de testes (JaCoCo)', 2)
+              .addTable([
+                [{ data: 'Resultado dos testes', header: true }, testOutcome],
+                [{ data: 'Cobertura de linhas', header: true }, coverage]
+              ])
+              .addLink('Baixar relatório completo', `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`)
+              .write();
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            try {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number
+              });
+              const existingComment = comments.find(comment =>
+                comment.user.type === 'Bot' && comment.body.includes(marker)
+              );
+
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existingComment.id,
+                  body
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body
+                });
+              }
+            } catch (error) {
+              core.warning(`Não foi possível comentar no PR; consulte o resumo da execução. ${error.message}`);
+            }

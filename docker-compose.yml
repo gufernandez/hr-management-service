@@ -26,6 +26,8 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile.dev
+    volumes:
+      - ./app/reports:/reports
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/hr_db

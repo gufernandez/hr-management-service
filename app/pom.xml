@@ -145,6 +145,7 @@
                         <exclude>**/*IT.java</exclude>
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
+                    <reportsDirectory>/reports/surefire</reportsDirectory>
                 </configuration>
             </plugin>
 
@@ -187,6 +188,9 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>/reports/jacoco</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

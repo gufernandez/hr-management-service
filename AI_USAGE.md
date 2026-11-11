@@ -41,3 +41,9 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Vamos implementar o RF01 que permite a criação de departamentos. Crie apenas os arquivos da application e domain layer, sem mexer na infraestrutura. Crie os testes unitários para testar apropriadamente o requisito e suas regras.
 - **Resultado/Decisão:** Foram criados os domínios e validações para a entidade Departamento foram criadas; a camada de serviço que checa a existência de um departamento e envia para salvar e os testes unitários validando os casos de uso e possíveis exceções.
+
+### 5. Implementação do RF01 - Banco de Dados
+
+- **Agente**: Copilot
+- **Prompt**: Para o RF01, crie a camada de infrastructure focando no banco de dados. Crie o arquivo Flyway para criação da tabela de departamento, o mapeamento da entidade do DB em código e a integração com o use case previamente criado via repository. Crie também os testes unitários que validam as novas camadas.
+- **Resultado/Decisão:** Os campos de texto no SQL utilizarão TEXT já que no PostgreSQL o tipo TEXT e o VARCHAR utilizam exatamente o mesmo mecanismo de alocação de memória e usar TEXT evita alterar migrações do banco (via Flyway) no futuro caso o tamanho de um campo de nome de departamento precise expandir de 50 para 100 caracteres.

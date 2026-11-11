@@ -26,12 +26,25 @@ spring:
     consumer:
       group-id: hr-management-group
       auto-offset-reset: earliest
+      enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      auto-startup: ${KAFKA_LISTENER_AUTO_STARTUP:true}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
+      properties:
+        enable.idempotence: true
+
+outbox:
+  poller:
+    enabled: ${OUTBOX_POLLER_ENABLED:true}
+    interval: ${OUTBOX_POLLER_INTERVAL:5s}
+    max-retries: ${OUTBOX_POLLER_MAX_RETRIES:5}
+  kafka:
+    topic: ${KAFKA_EMPLOYEE_EVENTS_TOPIC:hr.employee-events.v1}
 
 management:
   endpoints:

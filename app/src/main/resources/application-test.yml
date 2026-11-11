@@ -10,3 +10,9 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+  kafka:
+    listener:
+      auto-startup: false
+outbox:
+  poller:
+    enabled: false

@@ -38,3 +38,9 @@ docker compose run --rm app-test mvn clean verify
 ```
 
 Os relatórios do JaCoCo e do Surefire podem ser vistos na pasta `app/reports`. O Testcontainers precisa de acesso ao socket Docker; execute apenas testes e código confiáveis pelo serviço `app-test`.
+
+## 3. Kafka
+
+O serviço `kafka-init` cria o tópico `hr.employee-events.v1` depois que o broker estiver saudável e antes de iniciar `app` ou `app-test`. O broker aceita conexões internas em `kafka:9092` e conexões da máquina host em `localhost:9092`.
+
+O Outbox Poller publica eventos pendentes nesse tópico a cada 5 segundos. O producer aguarda o ACK do Kafka antes de marcar o evento como `PUBLISHED`; falhas incrementam `retry_count` e, ao atingir 5 tentativas, o evento é marcado como `FAILED`. Esses valores podem ser configurados por `OUTBOX_POLLER_INTERVAL`, `OUTBOX_POLLER_MAX_RETRIES` e `KAFKA_EMPLOYEE_EVENTS_TOPIC`.

@@ -145,3 +145,15 @@ Meu modo de uso dos agentes é prover um requisito de cada vez para evitar perda
 - **Agente**: Copilot
 - **Prompt**: Crie testes integrados que insiram eventos em `outbox_events`, validem sua publicação pelo Outbox Poller no Kafka e o consumo e persistência em `employee_events`. Cubra também falhas, retries até o status `FAILED` e reentrega de eventos duplicados.
 - **Resultado/Decisão:** Foi criada uma suíte de integração com PostgreSQL e Kafka via Testcontainers para cobrir o fluxo ponta a ponta, incluindo publicação/consumo, mapeamento de eventos de criação e alteração de status, persistência no histórico, duplicidade e esgotamento das tentativas na outbox.
+
+### 23. Aprimoramento da observabilidade
+
+- **Agente**: Copilot
+- **Prompt**: Aprimore a observabilidade de todo o serviço usando Spring Actuator para disponibilizar métricas, medir a duração dos métodos e facilitar a identificação de gargalos; adicione logs mais descritivos nos casos de uso e avalie ferramentas complementares.
+- **Resultado/Decisão:** Foi adicionada a registry Prometheus e habilitada a exposição de métricas em `/actuator/prometheus`. Um aspecto instrumenta a duração e o resultado dos métodos dos casos de uso, do Outbox Poller e do consumer Kafka, registrando `hr.operation.duration` com tags de componente, método e resultado, histogramas e limites de latência. Os logs passaram a ser JSON estruturado em todos os perfis e incluem contexto da operação, duração, tipo de exceção e correlação por `traceId`/`spanId`; foram incluídos spans via Micrometer Tracing/Brave e observações do producer e listener Kafka.
+
+### 24. Script para popular dados de teste local via API
+
+- **Agente**: Copilot
+- **Prompt**: Crie um script para popular uma base de dados de teste local chamando os endpoints, com 3 departamentos, 6 cargos e 40 colaboradores; prefira uma alternativa que permita configurar quantidades e criar entidades aleatoriamente.
+- **Resultado/Decisão:** Foi criado `scripts/seed-local.sh`, que usa Bash, `curl` e `jq` para criar departamentos, cargos e colaboradores pelos endpoints REST, respeitando a ordem e os vínculos por IDs retornados pela API. As quantidades e a URL base são configuráveis por variáveis de ambiente; os valores recebem identificadores por execução para evitar colisões ao repetir a carga, e erros HTTP interrompem o processo com a resposta recebida.

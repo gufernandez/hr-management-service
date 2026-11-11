@@ -1,6 +1,8 @@
 spring:
   application:
     name: employees-manager
+  aop:
+    proxy-target-class: false
   jackson:
     time-zone: America/Sao_Paulo
   profiles:
@@ -31,12 +33,15 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
       auto-startup: ${KAFKA_LISTENER_AUTO_STARTUP:true}
+      observation-enabled: true
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
       properties:
         enable.idempotence: true
+    template:
+      observation-enabled: true
 
 outbox:
   poller:
@@ -55,6 +60,12 @@ management:
   endpoint:
     health:
       show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
 
 springdoc:
   api-docs:

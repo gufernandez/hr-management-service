@@ -7,7 +7,7 @@
 
 ### 1. Subindo o Docker com a aplicação
 
-Suba todos serviços necessários (Spring Boot App, PostgreSQL, Kafka, SonarQube e MCP Server):
+Suba todos serviços necessários (Spring Boot App, PostgreSQL, Kafka e SonarQube):
 
 ```bash
 # Devem ser executados na pasta raíz do projeto

@@ -1,0 +1,40 @@
+name: Java CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master", "develop" ]
+
+jobs:
+  build-and-test:
+    name: Build, Run Tests & JaCoCo Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: app/pom.xml
+
+      # Run unit & integration tests using system Maven (no wrapper required)
+      - name: Build and Run Tests with Maven
+        working-directory: app
+        run: mvn clean verify
+
+      - name: Upload JaCoCo Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: app/target/site/jacoco/
+
+      - name: Build Docker Image Validation
+        working-directory: app
+        run: docker build -t hr-management-service:latest .

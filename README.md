@@ -26,7 +26,9 @@ As métricas de duração das operações da aplicação ficam disponíveis em
 `/actuator/metrics/hr.operation.duration`, com filtros por `component`, `method` e `outcome`.
 O endpoint Prometheus expõe histogramas para análise de latência e percentis.
 
-## 1. Definindo passo a passo
+## 1. Meu Planejamento
+
+Ao ler o desafio, criei o seguinte passo-a-passo para guiar meu desenvolvimento:
 
 1. Definir os requisitos técnicos e funcionais do sistema;
 2. Dados os requisitos, criar a arquitetura high level da solução;
@@ -57,9 +59,9 @@ Após a leitura do desafio e análise dos requisitos do desafio, com o auxílio 
 
 Os requisitos podem ser vistos [aqui](docs/requisitos.md).
 
-## 2.3 Observações Sobre Requisitos
+### 2.3 Observações Sobre Requisitos
 
-### Employee Status
+#### Employee Status
 Ao analisar a solução percebi que o Employee ter um campo "status" e o trecho:
 ```Ao inativar um colaborador, dispare EmployeeStatusChangedEvent``` indicam a necessidade de um endpoint para alterar o status do Employee após sua criação. <br>
 
@@ -67,14 +69,14 @@ Extrapolei que o status poderia ser: "CREATED", "INACTIVE" e "ACTIVE" e que o fu
 
 Ativar e desativar um funcionário pode desencadear em muitas ações além da alteração no banco, seguindo o DDD faria mais sentido, então, dois endpoints: /activate e /deactivate.
 
-### Deletar Employee
+#### Deletar Employee
 Acredito que um hard delete do colaborador não seja adequado, caso o time deseje acessar um histórico mais antigo de colaboradores que foram deletados.
 
 Optei então por realizar um soft delete, mudando o status dele para "DELETED". Colaboradores com este status não constarão nos requests que listam todos colaboradores, ou por departamento; também não poderão ser ativados ou desativados via endpoint. 
 
 Para um serviço de controle de funcionários como este, o custo devido a quantidade de entradas no banco não deve ser um problema. E futuramente será possível criar endpoints novos para acessar dados destes colaboradores que foram "removidos".
 
-### Payload Kafka
+#### Payload Kafka
 
 Para o desafio, utilizar o String Serializer e Deserializer para o Kafka funciona, em que podemos enviar o payload como string sem uma validação centralizada de formato. Contudo, para um projeto real, recomendaria utilizar Apache Avro pareado com um Schema Registry.
 

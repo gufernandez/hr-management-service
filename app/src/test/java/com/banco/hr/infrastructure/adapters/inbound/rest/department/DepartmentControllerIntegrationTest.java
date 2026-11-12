@@ -27,6 +27,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import com.banco.hr.infrastructure.adapters.inbound.rest.department.dto.CreateDepartmentRequest;
+import com.banco.hr.infrastructure.adapters.inbound.rest.department.dto.DepartmentResponse;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.DepartmentJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.DepartmentJpaRepository;
 

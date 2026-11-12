@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.banco.hr.application.ports.inbound.CreatePositionCommand;
+import com.banco.hr.application.ports.inbound.dto.CreatePositionCommand;
 import com.banco.hr.application.ports.outbound.PositionRepositoryPort;
 import com.banco.hr.domain.exception.DomainException;
 import com.banco.hr.domain.exception.PositionAlreadyExistsException;

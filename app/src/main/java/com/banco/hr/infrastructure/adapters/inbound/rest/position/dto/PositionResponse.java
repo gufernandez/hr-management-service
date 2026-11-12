@@ -1,4 +1,4 @@
-package com.banco.hr.infrastructure.adapters.inbound.rest.position;
+package com.banco.hr.infrastructure.adapters.inbound.rest.position.dto;
 
 import com.banco.hr.domain.model.position.Position;
 import com.banco.hr.infrastructure.adapters.inbound.rest.ApiDateTimeFormatter;

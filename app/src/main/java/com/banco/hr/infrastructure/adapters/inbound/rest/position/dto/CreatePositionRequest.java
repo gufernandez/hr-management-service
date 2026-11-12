@@ -1,4 +1,4 @@
-package com.banco.hr.infrastructure.adapters.inbound.rest.position;
+package com.banco.hr.infrastructure.adapters.inbound.rest.position.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

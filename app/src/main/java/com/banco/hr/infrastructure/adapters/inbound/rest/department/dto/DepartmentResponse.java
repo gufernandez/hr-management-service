@@ -1,4 +1,4 @@
-package com.banco.hr.infrastructure.adapters.inbound.rest.department;
+package com.banco.hr.infrastructure.adapters.inbound.rest.department.dto;
 
 import com.banco.hr.domain.model.department.Department;
 import com.banco.hr.infrastructure.adapters.inbound.rest.ApiDateTimeFormatter;

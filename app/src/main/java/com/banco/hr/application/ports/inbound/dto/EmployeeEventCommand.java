@@ -1,4 +1,4 @@
-package com.banco.hr.application.ports.inbound;
+package com.banco.hr.application.ports.inbound.dto;
 
 import com.banco.hr.domain.model.employee.EmployeeStatus;
 

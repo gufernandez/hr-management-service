@@ -24,8 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import com.banco.hr.application.ports.inbound.CreateDepartmentCommand;
 import com.banco.hr.application.ports.inbound.CreateDepartmentUseCase;
+import com.banco.hr.application.ports.inbound.dto.CreateDepartmentCommand;
 import com.banco.hr.domain.exception.DepartmentAlreadyExistsException;
 import com.banco.hr.domain.model.department.CostCenterCode;
 import com.banco.hr.domain.model.department.Department;

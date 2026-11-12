@@ -1,10 +1,17 @@
 # HR Management System
 
 Este é um desafio técnico para uma vaga de Engenheiro(a) de Software Sênior. 
+Alguns trechos dessa documentação foram redigidos por IA, destacarei tais com a tag *`AI ASSISTED`*.
 
-## Links
-- [Quick Start](QUICK_START.md): Instruções para subir a aplicação em seu ambiente
-- [AI Usage](AI_USAGE.md): Declaração de uso de IA.
+## Visão geral
+
+- **Guia para Rodar a Aplicação**: [Quick Start](QUICK_START.md). 
+- **Uso de IA**: [AI_USAGE.md](AI_USAGE.md).
+- **Banco padrão:** PostgreSQL. A configuração principal (`application.yml`) usa PostgreSQL em `localhost:5432` por padrão.
+- **Perfil de teste:** H2 em memória para testes que usam `application-test.yml`. Os testes de integração substituem essa configuração por PostgreSQL e Kafka em Testcontainers.
+- **Mensageria:** Apache Kafka, com o tópico `hr.employee-events.v1`.
+- **Documentação da API:** [Swagger UI](http://localhost:8080/swagger-ui.html) e [OpenAPI JSON](http://localhost:8080/api-docs).
+- **Atuadores:** `/actuator/health`, `/actuator/metrics` e `/actuator/prometheus`.
 
 ## Endpoints
 
@@ -48,173 +55,7 @@ Todo uso de IA será documentado na página [AI Usage](AI_USAGE.md).
 
 Após a leitura do desafio e análise dos requisitos do desafio, com o auxílio da IA, mapeei os requisitos técnicos e funcionais, assim como os domínios. 
 
-### 2.1. Requisitos Funcionais 
-
-#### **RF-01: Gestão de Departamentos**
-- Cadastrar Departamento (`POST /departments`) com id, name, costCenterCode.
-
-**Regra de Domínio:** Departamentos devem ter nome único.<br>
-
-```
-Department (table = department) {
-    id (UUID) PK, 
-    name (string), 
-    costCenterCode (string), 
-    createdAt (timestamp)
-}
-```
-
-#### **RF-02: Gestão de Cargos**
-- Cadastrar Cargo (`POST /positions`) com id, title, level (ex: Junior, Pleno, Senior).
-
-**Regra de Domínio:** Caso já exista um cargo com o mesmo título e nível, a API deve responder HTTP 409 e não criar outro.<br>
-**Normalização:** Ao receber a solicitação, título e nível devem ser convertidos para title case e espaços consecutivos devem ser reduzidos. Exemplo: `engenheiro  de software` e `junior` são armazenados como `Engenheiro de Software` e `Junior`.<br>
-
-```
-Position (table = position) {
-    id (UUID) PK, 
-    title (string), 
-    level(string), 
-    createdAt (timestamp)
-}
-```
-
-
-#### **RF-03: Gestão de Colaboradores**
-- Cadastrar Colaborador (`POST /employees`) vinculando a um departamento e cargo existentes.   
-    **Regra de Domínio:** O campo email deve ser validado e único; <br>
-    **Regra de Domínio:** O campo status deve ser criado como "CREATED";<br>
-
-- Listar Colaboradores (`GET /employees`).   
-    **Requisito Técnico:** Deve ser permitido a paginação dos resultados;<br>
-
-- Inativar Colaborador (`DELETE /employees/{id}`).   
-    **Regra de Domínio:** O campo status do Employee deve ser alterado para "DELETED";<br>
-
-- Buscar Colaboradores por Departamento (`GET /employees/search?department={departmentName}`).<br>
-    **Requisito Técnico:** Deve ser permitido a paginação dos resultados;<br>
-
-- Ativar Cadastro do Colaborador (`POST /employees/{id}/activate`)<br>
-    **Regra de Domínio:** O campo status do Employee deve ser alterado para "ACTIVE", apenas caso o status do funcionário seja "CREATED" ou "INACTIVE";<br>
-
-- Desativar Cadastro do Colaborador (`POST /employees/{id}/deactivate`)<br>
-    **Regra de Domínio:** O campo status do Employee deve ser alterado para "INACTIVE", apenas caso o status do funcionário seja "CREATED" ou "ACTIVE";<br>
-
-```
-Employee (table = employee) {
-    id (UUID) PK,
-    name (string), 
-    email (string), 
-    departmentId (Department FK), 
-    positionId (Position FK), 
-    status (string), // CREATED, ACTIVE, INACTIVE, DELETED
-    createdAt (timestamp), 
-    lastUpdatedAt(timestamp),
-    deletedAt (timestamp)
-}
-```
-
-#### **RF-04: Persistir Alterações do Colaborador na Tabela de Outbox Events**
-- Ao cadastrar um funcionário, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="CREATED", eventType = "EmployeeCreatedEvent".
-
-- Ao deletar um funcionário, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="DELETED", eventType="EmployeeStatusChangedEvent".
-
-- Caso tenha ocorrido alteração no status, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="ACTIVE", eventType="EmployeeStatusChangedEvent".
-
-- Caso tenha ocorrido alteração no status, uma entrada na tabela **OutboxEvents** deve ser criada contendo o id do funcionário, timestamp do evento, processingStatus = "PENDING", employeeStatus="INACTIVE", eventType="EmployeeStatusChangedEvent".
-
-```
-OutboxEvents (table = outbox_events) {
-    eventId (UUID) PK,
-    employeeId (UUID),
-    employeeStatus (string), // CREATED, ACTIVE, INACTIVE, DELETED
-    updateTime(timestamp),
-    eventType (string), // EmployeeStatusChangedEvent ou EmployeeCreatedEvent
-    processingStatus (string), // PENDING, PUBLISHED, FAILED
-    createdAt (timestamp),
-    publishedAt (timestamp),
-    retryCount (int)
-}
-```
-
-#### **RF-05: Publicar Eventos em  Kafka**
-
-- A aplicação deve checar na tabela OutboxEvents os eventos que ainda estão pendentes e enviá-los.<br>
-    **Regra de Domínio:** A mensagem Kafka terá no header **KafkaEmployeeEvent** será enviado tendo como eventId o mesmo da tabela, aggregateId = employeeId e seu payload terá o employeedId e o employeeStatus.<br>
-    **Requisito Técnico:** Eventos que foram processados (ACK) devem ser atualizados de "PENDING" para "PUBLISHED". Em caso de exceder o máximo de retries devem ser atualizado para "FAILED".<br>
-    **Requisito Técnico:** Deve ser permitido que múltiplas instâncias realizem o poller sem ter mensagens duplicadas (utilizar
-SELECT *
-FROM outbox_events
-WHERE status = 'PENDING'
-ORDER BY created_at
-LIMIT 100
-FOR UPDATE SKIP LOCKED;  por exemplo)<br>
-
-```
-KafkaEmployeeEvent (topic = hr.employee-events.v1){
-  "eventId": "uuid",
-  "eventType": "EmployeeStatusChangedEvent ou EmployeeCreatedEvent",
-  "aggregateId": "employee-uuid",
-  "occurredAt": "2026-11-10T15:30:00Z",
-  "payload": {
-    "employeeId": "employee-uuid",
-    "status": "ACTIVE"
-  }
-}
-```
-
-#### **RF-06: Manutencão de Histórico**
-
-- A aplicação deve consumir os eventos `EmployeeCreatedEvent` e `EmployeeStatusChangedEvent` e armazená-los no banco de dados. <br>
-    **Regra de Domínio:** Olhar definição da entidade EmployeeEvents;<br>
-    **Regra de Domínio:** Para o evento `EmployeeCreatedEvent` o eventType deve ser "CREATION" e employeeStatus = "CREATED";<br>
-    **Regra de Domínio:** Para o evento `EmployeeStatusChangedEvent` o eventType deve ser "UPDATE" e employeeStatus = "ACTIVE" ou "INACTIVE" ou "DELETED";<br>
-    **Requisito Técnico:** O ACK da mensagem deve ser feito apenas após persistência com sucesso.<br>
-    **Requisito Técnico:** Verificar se o mesmo eventId já foi processado.<br>
-
-```
-EmployeeEvents (table = employee_events) {
-    eventId (UUID) PK,
-    employeeId (UUID),
-    eventTime (timestamp),
-    eventType (string), // CREATION, UPDATE
-    employeeStatus (string), // CREATED, ACTIVE, INACTIVE, DELETED
-}
-```
-
-### 2.2. Requisitos Técnicos e de Arquitetura 
-
-#### **RT-01: Arquitetura DDD + Clean Architecture / Hexagonal**
-- Separação estrita de camadas (domain, application, infrastructure, interfaces).   
-- Domínio agnóstico (sem dependências de frameworks como Spring/JPA no domain).   
-- Modelo com Entidades Ricas, Agregados, Value Objects e Domain Services.   
-
-#### **RT-02: Persistência & Versionamento de Banco**
-- Uso de Spring Data JPA na camada de infraestrutura.
-- PostgreSQL configurado para produção/local dockerizado e H2 para suporte a testes/execução simplificada.- Migrations obrigatórias com Flyway (resources/db/migration).
-
-#### **RT-03: Mensageria & Eventos Assíncronos**
-- Publicação/Consumo desacoplados utilizando Apache Kafka.   
-- Implementação do Transactional Outbox Pattern para garantir a entrega atômica do evento junto com a persistência em banco.   
-
-#### **RT-04: Qualidade e Testes Automatizados**
-- Testes Unitários no Domínio e Aplicação (mínimo de 80% de cobertura).   
-- Testes de Integração usando Testcontainers com PostgreSQL e Kafka reais.   
-- Testes de Eventos (verificando fluxo completo de publicação e consumo).   
-
-#### **RT-05: Observabilidade e Versionamento**
-- Observabilidade com Spring Actuator e logs estruturados em JSON.
-- OpenAPI/Swagger documentado com versionamento de API (/v1/... ou via headers).
-
-#### **RT-06: Containerização & CI/CD**
-- Dockerfile multi-stage build funcional.   
-- docker-compose.yml contendo a aplicação, PostgreSQL e Kafka.   
-- Pipeline de CI/CD funcional rodando build e suíte de testes. 
-
-#### **RT-07: Práticas de Engenharia e Transparência com IA**
-- Documento AI_USAGE.md preenchido detalhando ferramentas, prompts, decisões arquiteturais e limitações.   
-- Commits claros indicando auxílio da IA onde aplicável.   
-- Documento README.md completo e ilustrado com Diagrama de Arquitetura (PlantUML/Mermaid).   
+Os requisitos podem ser vistos [aqui](docs/requisitos.md).
 
 ## 2.3 Observações Sobre Requisitos
 
@@ -222,11 +63,24 @@ EmployeeEvents (table = employee_events) {
 Ao analisar a solução percebi que o Employee ter um campo "status" e o trecho:
 ```Ao inativar um colaborador, dispare EmployeeStatusChangedEvent``` indicam a necessidade de um endpoint para alterar o status do Employee após sua criação. <br>
 
-Extrapolei que o status poderia ser: "CREATED", "INACTIVE" e "ACTIVE" e que o funcionário seria criado como PENDING inicialmente. <br>
+Extrapolei que o status poderia ser: "CREATED", "INACTIVE" e "ACTIVE" e que o funcionário seria criado como CREATED inicialmente. <br>
 
 Ativar e desativar um funcionário pode desencadear em muitas ações além da alteração no banco, seguindo o DDD faria mais sentido, então, dois endpoints: /activate e /deactivate.
 
-## 3. Solution Architecture
+### Deletar Employee
+Acredito que um hard delete do colaborador não seja adequado, caso o time deseje acessar um histórico mais antigo de colaboradores que foram deletados.
+
+Optei então por realizar um soft delete, mudando o status dele para "DELETED". Colaboradores com este status não constarão nos requests que listam todos colaboradores, ou por departamento; também não poderão ser ativados ou desativados via endpoint. 
+
+Para um serviço de controle de funcionários como este, o custo devido a quantidade de entradas no banco não deve ser um problema. E futuramente será possível criar endpoints novos para acessar dados destes colaboradores que foram "removidos".
+
+### Payload Kafka
+
+Para o desafio, utilizar o String Serializer e Deserializer para o Kafka funciona, em que podemos enviar o payload como string sem uma validação centralizada de formato. Contudo, para um projeto real, recomendaria utilizar Apache Avro pareado com um Schema Registry.
+
+Além do formato Avro validar o formato da mensagem, proibindo formatos inválidos de serem publicados; ele também é mais leve por ser enviado como um byte array.
+
+## 3. Solution Architecture (*`AI ASSISTED`*)
 
 Após o entendimento da solução como um todo e a definição dos requisitos, criei com auxílio de IA o diagrama abaixo da arquitetura inicialmente definida:
 
@@ -290,3 +144,80 @@ Com estas definições foi permitido gerar o scaffold da aplicação, a configur
 ### Endpoint /positions
 
 Ao implementar este endpoint percebi que do jeito que fiz o refinamento poderia haver muitas entradas repetidas da mesma combinação de Título+Level de cargo, então adicionei como requisito que deve-se validar a existência desta combinação na tabela antes de criar o cargo.
+
+## 6. Organização do código (*`AI ASSISTED`*)
+
+- `domain`: modelo de negócio, value objects, exceções e regras de transição.
+- `application`: casos de uso e portas inbound/outbound.
+- `infrastructure/adapters/inbound/rest`: endpoints, DTOs e tratamento de erros HTTP.
+- `infrastructure/adapters/inbound/messaging`: consumer Kafka.
+- `infrastructure/adapters/outbound/persistence`: entidades JPA, repositórios, mappers e adapters.
+- `infrastructure/adapters/outbound/messaging`: producer Kafka e Outbox Poller.
+- `infrastructure/config` e `infrastructure/observability`: configuração de infraestrutura, métricas e tracing.
+
+As alterações do colaborador e a entrada correspondente na outbox são persistidas na mesma transação. A publicação Kafka ocorre posteriormente, fora da requisição HTTP.
+
+## 7. API REST Construído (*`AI ASSISTED`*)
+
+Todos os recursos usam o prefixo `/api/v1`. A tabela resume os endpoints disponíveis; a documentação interativa apresenta schemas e respostas detalhadas.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/api/v1/departments` | Criar departamento |
+| `POST` | `/api/v1/positions` | Criar cargo |
+| `POST` | `/api/v1/employees` | Criar colaborador |
+| `GET` | `/api/v1/employees` | Listar colaboradores, opcionalmente paginados |
+| `GET` | `/api/v1/employees/search?department={name}` | Buscar colaboradores por departamento |
+| `POST` | `/api/v1/employees/{id}/activate` | Ativar colaborador |
+| `POST` | `/api/v1/employees/{id}/deactivate` | Desativar colaborador |
+| `DELETE` | `/api/v1/employees/{id}` | Excluir logicamente (status `DELETED`) |
+
+Para paginação, informe `offset` e `limit` juntos. Sem eles, a listagem retorna a coleção não paginada.
+
+### Exemplos de chamadas
+
+Criar um departamento:
+
+```bash
+curl --request POST http://localhost:8080/api/v1/departments \
+  --header "Content-Type: application/json" \
+  --data '{"name":"Engenharia","costCenterCode":"CC-100"}'
+```
+
+Criar um cargo:
+
+```bash
+curl --request POST http://localhost:8080/api/v1/positions \
+  --header "Content-Type: application/json" \
+  --data '{"title":"Engenheiro de Software","level":"Senior"}'
+```
+
+Criar um colaborador. Use os UUIDs retornados nas respostas dos dois requests anteriores:
+
+```bash
+curl --request POST http://localhost:8080/api/v1/employees \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name":"Ana Silva",
+    "email":"ana.silva@example.com",
+    "departmentId":"<department-uuid>",
+    "positionId":"<position-uuid>"
+  }'
+```
+
+Listar a primeira página e buscar por departamento:
+
+```bash
+curl "http://localhost:8080/api/v1/employees?offset=0&limit=20"
+curl "http://localhost:8080/api/v1/employees/search?department=Engenharia&offset=0&limit=20"
+```
+
+## 8. Eventos assíncronos (*`AI ASSISTED`*)
+
+1. A criação ou mudança de status do colaborador grava uma entrada `PENDING` em `outbox_events` na mesma transação da alteração do colaborador.
+2. O Outbox Poller consulta periodicamente eventos pendentes e publica no tópico `hr.employee-events.v1`. O uso de locks no banco permite que múltiplos pollers processem eventos concorrentes sem selecionar a mesma entrada ao mesmo tempo.
+3. O producer aguarda o ACK do Kafka. Após sucesso, a outbox passa a `PUBLISHED`; falhas incrementam `retry_count` e, ao alcançar o limite configurado, a entrada passa a `FAILED`.
+4. O consumer processa `EmployeeCreatedEvent` e `EmployeeStatusChangedEvent`, registra o histórico em `employee_events` e só confirma a mensagem depois que a persistência conclui com sucesso. O `eventId` permite reconhecer duplicatas.
+
+O evento usa a chave do colaborador como chave Kafka, o header `KafkaEmployeeEvent` e um envelope contendo `eventId`, `eventType`, `aggregateId`, `occurredAt` e payload.
+

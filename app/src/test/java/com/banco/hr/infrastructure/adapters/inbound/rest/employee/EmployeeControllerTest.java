@@ -1,14 +1,13 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
 
 import com.banco.hr.application.ports.inbound.ActivateEmployeeUseCase;
-import com.banco.hr.application.ports.inbound.CreateEmployeeCommand;
 import com.banco.hr.application.ports.inbound.CreateEmployeeUseCase;
 import com.banco.hr.application.ports.inbound.DeactivateEmployeeUseCase;
 import com.banco.hr.application.ports.inbound.DeleteEmployeeUseCase;
-import com.banco.hr.application.ports.inbound.EmployeePage;
-import com.banco.hr.application.ports.inbound.EmployeePageRequest;
 import com.banco.hr.application.ports.inbound.ListEmployeesUseCase;
 import com.banco.hr.application.ports.inbound.SearchEmployeesByDepartmentUseCase;
+import com.banco.hr.application.ports.inbound.dto.CreateEmployeeCommand;
+import com.banco.hr.application.ports.inbound.dto.PageQuery;
 import com.banco.hr.domain.exception.DepartmentNotFoundException;
 import com.banco.hr.domain.exception.DomainException;
 import com.banco.hr.domain.exception.EmployeeAlreadyExistsException;
@@ -18,6 +17,7 @@ import com.banco.hr.domain.model.employee.Email;
 import com.banco.hr.domain.model.employee.Employee;
 import com.banco.hr.domain.model.employee.EmployeeId;
 import com.banco.hr.domain.model.employee.EmployeeName;
+import com.banco.hr.domain.model.employee.EmployeePage;
 import com.banco.hr.domain.model.employee.EmployeeStatus;
 import com.banco.hr.domain.model.position.PositionId;
 import org.junit.jupiter.api.AfterEach;
@@ -195,7 +195,7 @@ class EmployeeControllerTest {
         // Preparação: configura uma página com metadados conhecidos.
         EmployeePage page = new EmployeePage(
                 List.of(employee(EmployeeStatus.CREATED)), 5, 10, 21);
-        when(listEmployeesUseCase.listEmployees(new EmployeePageRequest(5, 10))).thenReturn(page);
+        when(listEmployeesUseCase.listEmployees(new PageQuery(5, 10))).thenReturn(page);
 
         // Execução e verificação: conteúdo e metadados devem ser preservados na resposta.
         mockMvc.perform(get("/api/v1/employees")
@@ -254,7 +254,7 @@ class EmployeeControllerTest {
         EmployeePage page = new EmployeePage(
                 List.of(employee(EmployeeStatus.ACTIVE)), 0, 10, 1);
         when(searchEmployeesByDepartmentUseCase.searchByDepartment(
-                "Engenharia", new EmployeePageRequest(0, 10))).thenReturn(page);
+                "Engenharia", new PageQuery(0, 10))).thenReturn(page);
 
         // Execução e verificação: valida conteúdo e parâmetros encaminhados ao caso de uso.
         mockMvc.perform(get("/api/v1/employees/search")
@@ -266,7 +266,7 @@ class EmployeeControllerTest {
                 .andExpect(jsonPath("$.total").value(1));
 
         verify(searchEmployeesByDepartmentUseCase).searchByDepartment(
-                "Engenharia", new EmployeePageRequest(0, 10));
+                "Engenharia", new PageQuery(0, 10));
     }
 
     @Test

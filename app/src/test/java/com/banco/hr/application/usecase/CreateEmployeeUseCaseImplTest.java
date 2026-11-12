@@ -1,6 +1,6 @@
 package com.banco.hr.application.usecase;
 
-import com.banco.hr.application.ports.inbound.CreateEmployeeCommand;
+import com.banco.hr.application.ports.inbound.dto.CreateEmployeeCommand;
 import com.banco.hr.application.ports.outbound.DepartmentLookupPort;
 import com.banco.hr.application.ports.outbound.EmployeeRepositoryPort;
 import com.banco.hr.application.ports.outbound.PositionLookupPort;

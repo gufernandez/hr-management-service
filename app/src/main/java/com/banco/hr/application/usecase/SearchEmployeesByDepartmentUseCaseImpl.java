@@ -1,14 +1,14 @@
 package com.banco.hr.application.usecase;
 
-import com.banco.hr.application.ports.inbound.EmployeePage;
-import com.banco.hr.application.ports.inbound.EmployeePageRequest;
 import com.banco.hr.application.ports.inbound.SearchEmployeesByDepartmentUseCase;
+import com.banco.hr.application.ports.inbound.dto.PageQuery;
 import com.banco.hr.application.ports.outbound.DepartmentLookupPort;
 import com.banco.hr.application.ports.outbound.EmployeeRepositoryPort;
 import com.banco.hr.domain.exception.DepartmentNameNotFoundException;
 import com.banco.hr.domain.model.department.DepartmentId;
 import com.banco.hr.domain.model.department.DepartmentName;
 import com.banco.hr.domain.model.employee.Employee;
+import com.banco.hr.domain.model.employee.EmployeePage;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,12 +37,12 @@ public final class SearchEmployeesByDepartmentUseCaseImpl
     @Override
     public EmployeePage searchByDepartment(
             String departmentName,
-            EmployeePageRequest pageRequest) {
-        Objects.requireNonNull(pageRequest, "A paginação é obrigatória.");
+            PageQuery pageQuery) {
+        Objects.requireNonNull(pageQuery, "A paginação é obrigatória.");
         DepartmentId departmentId = resolveDepartmentId(departmentName);
 
         return Objects.requireNonNull(
-                employeeRepository.findNotDeletedByDepartment(departmentId, pageRequest),
+                employeeRepository.findNotDeletedByDepartment(departmentId, pageQuery),
                 "O repositório deve retornar a página de colaboradores.");
     }
 

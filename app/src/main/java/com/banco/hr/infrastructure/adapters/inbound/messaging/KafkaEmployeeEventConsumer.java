@@ -1,7 +1,7 @@
 package com.banco.hr.infrastructure.adapters.inbound.messaging;
 
 import com.banco.hr.application.ports.inbound.ConsumeEmployeeEventUseCase;
-import com.banco.hr.application.ports.inbound.EmployeeEventCommand;
+import com.banco.hr.application.ports.inbound.dto.EmployeeEventCommand;
 import com.banco.hr.domain.exception.InvalidEmployeeEventException;
 import com.banco.hr.infrastructure.adapters.messaging.dto.KafkaEmployeeEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;

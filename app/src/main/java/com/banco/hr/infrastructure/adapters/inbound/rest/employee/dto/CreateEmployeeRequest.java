@@ -1,10 +1,10 @@
-package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
+package com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto;
+
+import java.util.UUID;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.UUID;
 
 public record CreateEmployeeRequest(
         @NotBlank(message = "O nome do colaborador é obrigatório.") String name,

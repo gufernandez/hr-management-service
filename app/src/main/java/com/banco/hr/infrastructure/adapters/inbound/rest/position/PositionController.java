@@ -1,8 +1,11 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.position;
 
-import com.banco.hr.application.ports.inbound.CreatePositionCommand;
 import com.banco.hr.application.ports.inbound.CreatePositionUseCase;
+import com.banco.hr.application.ports.inbound.dto.CreatePositionCommand;
 import com.banco.hr.domain.model.position.Position;
+import com.banco.hr.infrastructure.adapters.inbound.rest.position.dto.CreatePositionRequest;
+import com.banco.hr.infrastructure.adapters.inbound.rest.position.dto.PositionResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

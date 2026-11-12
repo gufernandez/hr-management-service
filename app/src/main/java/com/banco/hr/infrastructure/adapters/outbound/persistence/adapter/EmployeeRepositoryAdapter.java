@@ -1,14 +1,15 @@
 package com.banco.hr.infrastructure.adapters.outbound.persistence.adapter;
 
-import com.banco.hr.application.ports.inbound.EmployeePage;
-import com.banco.hr.application.ports.inbound.EmployeePageRequest;
+import com.banco.hr.application.ports.inbound.dto.PageQuery;
 import com.banco.hr.application.ports.outbound.EmployeeRepositoryPort;
 import com.banco.hr.domain.exception.EmployeeAlreadyExistsException;
 import com.banco.hr.domain.model.department.DepartmentId;
 import com.banco.hr.domain.model.employee.Email;
 import com.banco.hr.domain.model.employee.Employee;
 import com.banco.hr.domain.model.employee.EmployeeId;
+import com.banco.hr.domain.model.employee.EmployeePage;
 import com.banco.hr.domain.model.employee.EmployeeStatus;
+import com.banco.hr.infrastructure.adapters.outbound.persistence.adapter.dto.OffsetLimitPageable;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.EmployeeJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEventJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEventType;
@@ -16,7 +17,7 @@ import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxPr
 import com.banco.hr.infrastructure.adapters.outbound.persistence.mapper.EmployeePersistenceMapper;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.EmployeeJpaRepository;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.OutboxEventJpaRepository;
-import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.OffsetLimitPageable;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Repository;
@@ -105,19 +106,19 @@ public class EmployeeRepositoryAdapter implements EmployeeRepositoryPort {
     }
 
     @Override
-    public EmployeePage findAllNotDeleted(EmployeePageRequest pageRequest) {
+    public EmployeePage findAllNotDeleted(PageQuery pageQuery) {
         Page<EmployeeJpaEntity> page = employeeJpaRepository.findAllByStatusNot(
-                EmployeeStatus.DELETED, pageable(pageRequest));
-        return toEmployeePage(page, pageRequest);
+                EmployeeStatus.DELETED, pageable(pageQuery));
+        return toEmployeePage(page, pageQuery);
     }
 
     @Override
     public EmployeePage findNotDeletedByDepartment(
             DepartmentId departmentId,
-            EmployeePageRequest pageRequest) {
+            PageQuery pageQuery) {
         Page<EmployeeJpaEntity> page = employeeJpaRepository.findAllByDepartmentIdAndStatusNot(
-                departmentId.value(), EmployeeStatus.DELETED, pageable(pageRequest));
-        return toEmployeePage(page, pageRequest);
+                departmentId.value(), EmployeeStatus.DELETED, pageable(pageQuery));
+        return toEmployeePage(page, pageQuery);
     }
 
     @Override
@@ -130,20 +131,20 @@ public class EmployeeRepositoryAdapter implements EmployeeRepositoryPort {
                 .toList();
     }
 
-    private OffsetLimitPageable pageable(EmployeePageRequest pageRequest) {
-        return new OffsetLimitPageable(pageRequest.offset(), pageRequest.limit());
+    private OffsetLimitPageable pageable(PageQuery pageQuery) {
+        return new OffsetLimitPageable(pageQuery.offset(), pageQuery.limit());
     }
 
     private EmployeePage toEmployeePage(
             Page<EmployeeJpaEntity> page,
-            EmployeePageRequest pageRequest) {
+            PageQuery pageQuery) {
         List<Employee> employees = page.getContent().stream()
                 .map(employeePersistenceMapper::toDomain)
                 .toList();
         return new EmployeePage(
                 employees,
-                pageRequest.offset(),
-                pageRequest.limit(),
+                pageQuery.offset(),
+                pageQuery.limit(),
                 page.getTotalElements());
     }
 }

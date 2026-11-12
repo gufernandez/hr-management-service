@@ -1,10 +1,10 @@
-package com.banco.hr.application.ports.inbound;
+package com.banco.hr.application.ports.inbound.dto;
 
 import com.banco.hr.domain.exception.DomainException;
 
-public record EmployeePageRequest(long offset, int limit) {
+public record PageQuery(long offset, int limit) {
 
-    public EmployeePageRequest {
+    public PageQuery {
         if (offset < 0) {
             throw new DomainException("O offset da paginação não pode ser negativo.");
         }

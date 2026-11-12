@@ -1,7 +1,7 @@
 package com.banco.hr.application.usecase;
 
-import com.banco.hr.application.ports.inbound.CreateDepartmentCommand;
 import com.banco.hr.application.ports.inbound.CreateDepartmentUseCase;
+import com.banco.hr.application.ports.inbound.dto.CreateDepartmentCommand;
 import com.banco.hr.application.ports.outbound.DepartmentRepositoryPort;
 import com.banco.hr.domain.exception.DepartmentAlreadyExistsException;
 import com.banco.hr.domain.model.department.CostCenterCode;

@@ -1,8 +1,11 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.department;
 
-import com.banco.hr.application.ports.inbound.CreateDepartmentCommand;
 import com.banco.hr.application.ports.inbound.CreateDepartmentUseCase;
+import com.banco.hr.application.ports.inbound.dto.CreateDepartmentCommand;
 import com.banco.hr.domain.model.department.Department;
+import com.banco.hr.infrastructure.adapters.inbound.rest.department.dto.CreateDepartmentRequest;
+import com.banco.hr.infrastructure.adapters.inbound.rest.department.dto.DepartmentResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

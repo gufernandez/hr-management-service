@@ -1,8 +1,8 @@
-package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
-
-import com.banco.hr.application.ports.inbound.EmployeePage;
+package com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto;
 
 import java.util.List;
+
+import com.banco.hr.domain.model.employee.EmployeePage;
 
 public record EmployeePageResponse(
         List<EmployeeResponse> content,

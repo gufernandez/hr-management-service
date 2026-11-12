@@ -1,8 +1,8 @@
-## 2. Requisitos Funcionais e Técnicos 
+# Requisitos Funcionais e Técnicos  (*`AI ASSISTED`*)
 
 Após a leitura do desafio e análise dos requisitos do desafio, com o auxílio da IA, mapeei os requisitos técnicos e funcionais, assim como os domínios. 
 
-### 2.1. Requisitos Funcionais 
+## 1. Requisitos Funcionais 
 
 #### **RF-01: Gestão de Departamentos**
 - Cadastrar Departamento (`POST /departments`) com id, name, costCenterCode.
@@ -136,7 +136,7 @@ EmployeeEvents (table = employee_events) {
 }
 ```
 
-### 2.2. Requisitos Técnicos e de Arquitetura 
+## 2. Requisitos Técnicos e de Arquitetura 
 
 #### **RT-01: Arquitetura DDD + Clean Architecture / Hexagonal**
 - Separação estrita de camadas (domain, application, infrastructure, interfaces).   

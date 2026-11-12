@@ -25,6 +25,12 @@ docker compose down
 
 Após subir os containers, os endpoints estarão disponíveis para acesso.
 
+Alterações feitas no código não são automaticamente refletidas no container, já que optei por não mapear a pastar app/src. Caso queria realizar alterações no código e atualizar o docker, rode o comando:
+
+```bash
+docker compose build --no-cache app-test
+```
+
 ### 2. Massa de Testes Local
 
 Com a aplicação em execução, use o script `seed-local.sh` para criar dados pela API. Por padrão, o script cria 3 departamentos, 6 cargos e 40 colaboradores, vinculando cada colaborador a departamentos e cargos existentes:

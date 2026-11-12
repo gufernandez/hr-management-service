@@ -1,6 +1,4 @@
-package com.banco.hr.application.ports.inbound;
-
-import com.banco.hr.domain.model.employee.Employee;
+package com.banco.hr.domain.model.employee;
 
 import java.util.List;
 import java.util.Objects;

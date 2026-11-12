@@ -1,4 +1,4 @@
-package com.banco.hr.infrastructure.adapters.outbound.persistence.repository;
+package com.banco.hr.infrastructure.adapters.outbound.persistence.adapter.dto;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

@@ -1,5 +1,7 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.position;
 
+import com.banco.hr.infrastructure.adapters.inbound.rest.position.dto.CreatePositionRequest;
+import com.banco.hr.infrastructure.adapters.inbound.rest.position.dto.PositionResponse;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.PositionJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.repository.PositionJpaRepository;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,9 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
 
 import com.banco.hr.domain.model.employee.EmployeeStatus;
+import com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto.CreateEmployeeRequest;
+import com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto.EmployeePageResponse;
+import com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto.EmployeeResponse;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.DepartmentJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.EmployeeJpaEntity;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.OutboxEventJpaEntity;

@@ -1,19 +1,9 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
 
-import com.banco.hr.application.ports.inbound.ActivateEmployeeUseCase;
-import com.banco.hr.application.ports.inbound.CreateEmployeeCommand;
-import com.banco.hr.application.ports.inbound.CreateEmployeeUseCase;
-import com.banco.hr.application.ports.inbound.DeactivateEmployeeUseCase;
-import com.banco.hr.application.ports.inbound.DeleteEmployeeUseCase;
-import com.banco.hr.application.ports.inbound.EmployeePageRequest;
-import com.banco.hr.application.ports.inbound.ListEmployeesUseCase;
-import com.banco.hr.application.ports.inbound.SearchEmployeesByDepartmentUseCase;
-import com.banco.hr.domain.exception.DomainException;
-import com.banco.hr.domain.model.employee.Employee;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import java.net.URI;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +15,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
-import java.util.List;
-import java.util.UUID;
+import com.banco.hr.application.ports.inbound.ActivateEmployeeUseCase;
+import com.banco.hr.application.ports.inbound.CreateEmployeeUseCase;
+import com.banco.hr.application.ports.inbound.DeactivateEmployeeUseCase;
+import com.banco.hr.application.ports.inbound.DeleteEmployeeUseCase;
+import com.banco.hr.application.ports.inbound.ListEmployeesUseCase;
+import com.banco.hr.application.ports.inbound.SearchEmployeesByDepartmentUseCase;
+import com.banco.hr.application.ports.inbound.dto.CreateEmployeeCommand;
+import com.banco.hr.application.ports.inbound.dto.PageQuery;
+import com.banco.hr.domain.exception.DomainException;
+import com.banco.hr.domain.model.employee.Employee;
+import com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto.CreateEmployeeRequest;
+import com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto.EmployeePageResponse;
+import com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto.EmployeeResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/employees")
@@ -84,20 +89,20 @@ public class EmployeeController {
             description = "Lista colaboradores não excluídos, com paginação opcional.")
     @ApiResponse(responseCode = "200", description = "Colaboradores listados com sucesso.")
     @ApiResponse(responseCode = "400", description = "Os parâmetros de paginação são inválidos.")
-    public ResponseEntity<?> list(
-            @RequestParam(name = "offset", required = false) Long offset,
-            @RequestParam(name = "limit", required = false) Integer limit) {
+        public ResponseEntity<Object> list(
+            @RequestParam(required = false) Long offset,
+            @RequestParam(required = false) Integer limit) {
         if (offset == null && limit == null) {
             List<EmployeeResponse> employees = listEmployeesUseCase.listEmployees().stream()
                     .map(EmployeeResponse::fromEmployee)
                     .toList();
-            return ResponseEntity.ok(employees);
+            return ResponseEntity.ok((Object) employees);
         }
         if (offset == null || limit == null) {
             throw new DomainException("Offset e limit devem ser informados juntos.");
         }
-        return ResponseEntity.ok(EmployeePageResponse.fromPage(
-                listEmployeesUseCase.listEmployees(new EmployeePageRequest(offset, limit))));
+        return ResponseEntity.ok((Object) EmployeePageResponse.fromPage(
+                listEmployeesUseCase.listEmployees(new PageQuery(offset, limit))));
     }
 
     @DeleteMapping("/{id}")
@@ -117,24 +122,24 @@ public class EmployeeController {
     @ApiResponse(responseCode = "200", description = "Busca concluída com sucesso.")
     @ApiResponse(responseCode = "400", description = "Os parâmetros de paginação são inválidos.")
     @ApiResponse(responseCode = "404", description = "Departamento não encontrado.")
-    public ResponseEntity<?> searchByDepartment(
+        public ResponseEntity<Object> searchByDepartment(
             @RequestParam("department") String departmentName,
-            @RequestParam(name = "offset", required = false) Long offset,
-            @RequestParam(name = "limit", required = false) Integer limit) {
+            @RequestParam(required = false) Long offset,
+            @RequestParam(required = false) Integer limit) {
         if (offset == null && limit == null) {
             List<EmployeeResponse> employees =
                     searchEmployeesByDepartmentUseCase.searchByDepartment(departmentName).stream()
-                            .map(EmployeeResponse::fromEmployee)
+                            .map(EmployeeResponse::fromEmployee) 
                             .toList();
-            return ResponseEntity.ok(employees);
+            return ResponseEntity.ok((Object) employees);
         }
         if (offset == null || limit == null) {
             throw new DomainException("Offset e limit devem ser informados juntos.");
         }
-        EmployeePageRequest pageRequest = new EmployeePageRequest(offset, limit);
-        return ResponseEntity.ok(EmployeePageResponse.fromPage(
+        PageQuery pageQuery = new PageQuery(offset, limit);
+        return ResponseEntity.ok((Object) EmployeePageResponse.fromPage(
                 searchEmployeesByDepartmentUseCase.searchByDepartment(
-                        departmentName, pageRequest)));
+                        departmentName, pageQuery)));
     }
 
     @PostMapping("/{id}/activate")

@@ -1,19 +1,22 @@
 package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
 
+import java.net.URI;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 import com.banco.hr.domain.exception.DepartmentNameNotFoundException;
 import com.banco.hr.domain.exception.DepartmentNotFoundException;
 import com.banco.hr.domain.exception.DomainException;
 import com.banco.hr.domain.exception.EmployeeAlreadyExistsException;
 import com.banco.hr.domain.exception.EmployeeNotFoundException;
 import com.banco.hr.domain.exception.PositionNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.net.URI;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice(assignableTypes = EmployeeController.class)
 public class EmployeeExceptionHandler {
@@ -49,7 +52,8 @@ public class EmployeeExceptionHandler {
             String title,
             DomainException exception,
             HttpServletRequest request) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, exception.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatusCode.valueOf(status.value()));
+        problem.setDetail(exception.getMessage());
         problem.setTitle(title);
         problem.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(status).body(problem);

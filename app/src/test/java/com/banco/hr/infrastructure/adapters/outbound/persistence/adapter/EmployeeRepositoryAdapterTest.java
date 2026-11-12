@@ -26,14 +26,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import com.banco.hr.application.ports.inbound.EmployeePage;
-import com.banco.hr.application.ports.inbound.EmployeePageRequest;
+import com.banco.hr.application.ports.inbound.dto.PageQuery;
 import com.banco.hr.domain.exception.EmployeeAlreadyExistsException;
 import com.banco.hr.domain.model.department.DepartmentId;
 import com.banco.hr.domain.model.employee.Email;
 import com.banco.hr.domain.model.employee.Employee;
 import com.banco.hr.domain.model.employee.EmployeeId;
 import com.banco.hr.domain.model.employee.EmployeeName;
+import com.banco.hr.domain.model.employee.EmployeePage;
 import com.banco.hr.domain.model.employee.EmployeeStatus;
 import com.banco.hr.domain.model.position.PositionId;
 import com.banco.hr.infrastructure.adapters.outbound.persistence.entity.EmployeeJpaEntity;
@@ -179,7 +179,7 @@ class EmployeeRepositoryAdapterTest {
     @DisplayName("Deve preservar offset e limite ao listar colaboradores paginados")
     void findAllNotDeletedPreservesOffsetAndLimit() {
         // Preparação: usa offset não múltiplo do limite para validar paginação exata.
-        EmployeePageRequest request = new EmployeePageRequest(7, 5);
+        PageQuery request = new PageQuery(7, 5);
         EmployeeJpaEntity entity = entity();
         Employee employee = employee();
         when(employeeJpaRepository.findAllByStatusNot(eq(EmployeeStatus.DELETED), any(Pageable.class)))
@@ -206,7 +206,7 @@ class EmployeeRepositoryAdapterTest {
     @DisplayName("Deve buscar página não deletada pelo departamento")
     void findNotDeletedByDepartmentUsesDepartmentUuidAndPagination() {
         // Preparação: configura departamento e página de resultado.
-        EmployeePageRequest request = new EmployeePageRequest(0, 10);
+        PageQuery request = new PageQuery(0, 10);
         EmployeeJpaEntity entity = entity();
         Employee employee = employee();
         when(employeeJpaRepository.findAllByDepartmentIdAndStatusNot(

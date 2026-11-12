@@ -1,7 +1,7 @@
 package com.banco.hr.application.usecase;
 
-import com.banco.hr.application.ports.inbound.CreatePositionCommand;
 import com.banco.hr.application.ports.inbound.CreatePositionUseCase;
+import com.banco.hr.application.ports.inbound.dto.CreatePositionCommand;
 import com.banco.hr.application.ports.outbound.PositionRepositoryPort;
 import com.banco.hr.domain.exception.PositionAlreadyExistsException;
 import com.banco.hr.domain.model.position.Position;

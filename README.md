@@ -1,17 +1,17 @@
 # HR Management System
 
 Este é um desafio técnico para uma vaga de Engenheiro(a) de Software Sênior. 
-
+Alguns trechos dessa documentação foram redigidos por IA, destacarei tais com a tag *`AI ASSISTED`*.
 
 ## Visão geral
 
+- **Guia para Rodar a Aplicação**: [Quick Start](QUICK_START.md). 
+- **Uso de IA**: [AI_USAGE.md](AI_USAGE.md).
 - **Banco padrão:** PostgreSQL. A configuração principal (`application.yml`) usa PostgreSQL em `localhost:5432` por padrão.
 - **Perfil de teste:** H2 em memória para testes que usam `application-test.yml`. Os testes de integração substituem essa configuração por PostgreSQL e Kafka em Testcontainers.
 - **Mensageria:** Apache Kafka, com o tópico `hr.employee-events.v1`.
 - **Documentação da API:** [Swagger UI](http://localhost:8080/swagger-ui.html) e [OpenAPI JSON](http://localhost:8080/api-docs).
 - **Atuadores:** `/actuator/health`, `/actuator/metrics` e `/actuator/prometheus`.
-
-Para iniciar a aplicação e suas dependências por Docker Compose, siga o [Quick Start](QUICK_START.md). O processo de desenvolvimento com apoio de IA está registrado em [AI_USAGE.md](AI_USAGE.md).
 
 ## Endpoints
 
@@ -63,11 +63,24 @@ Os requisitos podem ser vistos [aqui](docs/requisitos.md).
 Ao analisar a solução percebi que o Employee ter um campo "status" e o trecho:
 ```Ao inativar um colaborador, dispare EmployeeStatusChangedEvent``` indicam a necessidade de um endpoint para alterar o status do Employee após sua criação. <br>
 
-Extrapolei que o status poderia ser: "CREATED", "INACTIVE" e "ACTIVE" e que o funcionário seria criado como PENDING inicialmente. <br>
+Extrapolei que o status poderia ser: "CREATED", "INACTIVE" e "ACTIVE" e que o funcionário seria criado como CREATED inicialmente. <br>
 
 Ativar e desativar um funcionário pode desencadear em muitas ações além da alteração no banco, seguindo o DDD faria mais sentido, então, dois endpoints: /activate e /deactivate.
 
-## 3. Solution Architecture
+### Deletar Employee
+Acredito que um hard delete do colaborador não seja adequado, caso o time deseje acessar um histórico mais antigo de colaboradores que foram deletados.
+
+Optei então por realizar um soft delete, mudando o status dele para "DELETED". Colaboradores com este status não constarão nos requests que listam todos colaboradores, ou por departamento; também não poderão ser ativados ou desativados via endpoint. 
+
+Para um serviço de controle de funcionários como este, o custo devido a quantidade de entradas no banco não deve ser um problema. E futuramente será possível criar endpoints novos para acessar dados destes colaboradores que foram "removidos".
+
+### Payload Kafka
+
+Para o desafio, utilizar o String Serializer e Deserializer para o Kafka funciona, em que podemos enviar o payload como string sem uma validação centralizada de formato. Contudo, para um projeto real, recomendaria utilizar Apache Avro pareado com um Schema Registry.
+
+Além do formato Avro validar o formato da mensagem, proibindo formatos inválidos de serem publicados; ele também é mais leve por ser enviado como um byte array.
+
+## 3. Solution Architecture (*`AI ASSISTED`*)
 
 Após o entendimento da solução como um todo e a definição dos requisitos, criei com auxílio de IA o diagrama abaixo da arquitetura inicialmente definida:
 
@@ -132,7 +145,7 @@ Com estas definições foi permitido gerar o scaffold da aplicação, a configur
 
 Ao implementar este endpoint percebi que do jeito que fiz o refinamento poderia haver muitas entradas repetidas da mesma combinação de Título+Level de cargo, então adicionei como requisito que deve-se validar a existência desta combinação na tabela antes de criar o cargo.
 
-## 6. Organização do código
+## 6. Organização do código (*`AI ASSISTED`*)
 
 - `domain`: modelo de negócio, value objects, exceções e regras de transição.
 - `application`: casos de uso e portas inbound/outbound.
@@ -144,7 +157,7 @@ Ao implementar este endpoint percebi que do jeito que fiz o refinamento poderia 
 
 As alterações do colaborador e a entrada correspondente na outbox são persistidas na mesma transação. A publicação Kafka ocorre posteriormente, fora da requisição HTTP.
 
-## 7. API REST Construído
+## 7. API REST Construído (*`AI ASSISTED`*)
 
 Todos os recursos usam o prefixo `/api/v1`. A tabela resume os endpoints disponíveis; a documentação interativa apresenta schemas e respostas detalhadas.
 
@@ -199,12 +212,12 @@ curl "http://localhost:8080/api/v1/employees?offset=0&limit=20"
 curl "http://localhost:8080/api/v1/employees/search?department=Engenharia&offset=0&limit=20"
 ```
 
-## 8. Eventos assíncronos
+## 8. Eventos assíncronos (*`AI ASSISTED`*)
 
 1. A criação ou mudança de status do colaborador grava uma entrada `PENDING` em `outbox_events` na mesma transação da alteração do colaborador.
 2. O Outbox Poller consulta periodicamente eventos pendentes e publica no tópico `hr.employee-events.v1`. O uso de locks no banco permite que múltiplos pollers processem eventos concorrentes sem selecionar a mesma entrada ao mesmo tempo.
 3. O producer aguarda o ACK do Kafka. Após sucesso, a outbox passa a `PUBLISHED`; falhas incrementam `retry_count` e, ao alcançar o limite configurado, a entrada passa a `FAILED`.
 4. O consumer processa `EmployeeCreatedEvent` e `EmployeeStatusChangedEvent`, registra o histórico em `employee_events` e só confirma a mensagem depois que a persistência conclui com sucesso. O `eventId` permite reconhecer duplicatas.
 
-O evento usa a chave do colaborador como chave Kafka, o header `KafkaEmployeeEvent` e um envelope contendo `eventId`, `eventType`, `aggregateId`, `occurredAt` e payload. Consulte a documentação Swagger e a configuração da aplicação para os parâmetros de execução.
+O evento usa a chave do colaborador como chave Kafka, o header `KafkaEmployeeEvent` e um envelope contendo `eventId`, `eventType`, `aggregateId`, `occurredAt` e payload.
 

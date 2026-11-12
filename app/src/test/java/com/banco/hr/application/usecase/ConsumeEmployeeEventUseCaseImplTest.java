@@ -1,6 +1,6 @@
 package com.banco.hr.application.usecase;
 
-import com.banco.hr.application.ports.inbound.EmployeeEventCommand;
+import com.banco.hr.application.ports.inbound.dto.EmployeeEventCommand;
 import com.banco.hr.application.ports.outbound.EmployeeEventRepositoryPort;
 import com.banco.hr.domain.exception.InvalidEmployeeEventException;
 import com.banco.hr.domain.model.employee.EmployeeEvent;

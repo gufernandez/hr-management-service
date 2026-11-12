@@ -1,9 +1,9 @@
-package com.banco.hr.infrastructure.adapters.inbound.rest.employee;
+package com.banco.hr.infrastructure.adapters.inbound.rest.employee.dto;
+
+import java.util.UUID;
 
 import com.banco.hr.domain.model.employee.Employee;
 import com.banco.hr.infrastructure.adapters.inbound.rest.ApiDateTimeFormatter;
-
-import java.util.UUID;
 
 public record EmployeeResponse(
         UUID id,

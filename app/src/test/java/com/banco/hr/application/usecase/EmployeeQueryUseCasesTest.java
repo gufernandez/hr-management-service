@@ -1,7 +1,6 @@
 package com.banco.hr.application.usecase;
 
-import com.banco.hr.application.ports.inbound.EmployeePage;
-import com.banco.hr.application.ports.inbound.EmployeePageRequest;
+import com.banco.hr.application.ports.inbound.dto.PageQuery;
 import com.banco.hr.application.ports.outbound.DepartmentLookupPort;
 import com.banco.hr.application.ports.outbound.EmployeeRepositoryPort;
 import com.banco.hr.domain.exception.DepartmentNameNotFoundException;
@@ -9,6 +8,8 @@ import com.banco.hr.domain.exception.DomainException;
 import com.banco.hr.domain.model.department.DepartmentId;
 import com.banco.hr.domain.model.department.DepartmentName;
 import com.banco.hr.domain.model.employee.Employee;
+import com.banco.hr.domain.model.employee.EmployeePage;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class EmployeeQueryUseCasesTest {
 
     private static final DepartmentId DEPARTMENT_ID =
             new DepartmentId(UUID.fromString("c1e49b85-7a82-4c50-a1b1-548c8c0eb397"));
-    private static final EmployeePageRequest PAGE_REQUEST = new EmployeePageRequest(20, 10);
+    private static final PageQuery PAGE_REQUEST = new PageQuery(20, 10);
 
     @Mock
     private EmployeeRepositoryPort employeeRepository;
